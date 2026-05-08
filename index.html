@@ -7,22 +7,22 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
     :root {
-        --bg-color: #F9FAFB;
-        --panel-bg: #FFFFFF;
-        --text-main: #111827;
-        --text-muted: #6B7280;
-        --accent: #000000;
-        --accent-hover: #374151;
-        --border: #E5E7EB;
+        --bg-color: #F0F4F8;
+        --panel-bg: rgba(255, 255, 255, 0.85);
+        --text-main: #0F172A;
+        --text-muted: #64748B;
+        --accent: #3B82F6;
+        --accent-hover: #2563EB;
+        --border: rgba(226, 232, 240, 0.8);
         
         --color-hit: #10B981;
         --color-fault: #EF4444;
         --color-evict: #F59E0B;
-        --color-info: #3B82F6;
+        --color-info: #0EA5E9;
 
-        --shadow: 0 4px 6px rgba(0,0,0,0.05), 0 10px 15px -3px rgba(0,0,0,0.05);
-        --radius: 12px;
-        --transition: all 0.3s ease;
+        --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+        --radius: 16px;
+        --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         --font: 'Inter', sans-serif;
     }
 
@@ -30,16 +30,19 @@
 
     body {
         font-family: var(--font);
-        background-color: var(--bg-color);
+        background: linear-gradient(135deg, #E0E7FF 0%, #F3F4F6 100%);
         color: var(--text-main);
-        line-height: 1.5;
+        line-height: 1.6;
+        min-height: 100vh;
         overflow-x: hidden;
     }
 
     /* Top Navigation */
     nav {
-        background: var(--panel-bg);
-        border-bottom: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.4);
         padding: 0 2rem;
         display: flex;
         justify-content: center;
@@ -47,7 +50,7 @@
         position: sticky;
         top: 0;
         z-index: 100;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
     }
 
     .nav-btn {
@@ -95,20 +98,30 @@
 
     .card {
         background: var(--panel-bg);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
         border-radius: var(--radius);
         box-shadow: var(--shadow);
-        border: 1px solid var(--border);
-        padding: 2rem;
+        border: 1px solid rgba(255,255,255,0.6);
+        padding: 2.5rem;
         margin-bottom: 2rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 30px -10px rgba(0,0,0,0.08);
     }
 
     .card-title {
-        font-size: 1.25rem;
+        font-size: 1.5rem;
         font-weight: 600;
         margin-bottom: 1.5rem;
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        color: var(--text-main);
+        letter-spacing: -0.02em;
     }
 
     /* Form Controls */
@@ -161,17 +174,26 @@
     }
 
     .btn-primary {
-        background: var(--accent);
+        background: linear-gradient(135deg, var(--accent) 0%, #60A5FA 100%);
         color: white;
+        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
     }
-    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-primary:hover { 
+        background: linear-gradient(135deg, var(--accent-hover) 0%, var(--accent) 100%);
+        box-shadow: 0 6px 8px -1px rgba(59, 130, 246, 0.4);
+        transform: translateY(-1px);
+    }
 
     .btn-secondary {
-        background: var(--bg-color);
+        background: rgba(255, 255, 255, 0.8);
         color: var(--text-main);
         border: 1px solid var(--border);
     }
-    .btn-secondary:hover { background: #F3F4F6; }
+    .btn-secondary:hover { 
+        background: #FFFFFF; 
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    }
 
     /* Tags/Pills */
     .pill-group {
@@ -209,12 +231,14 @@
     }
 
     .explanation-panel {
-        background: #F8FAFC;
+        background: rgba(248, 250, 252, 0.7);
+        backdrop-filter: blur(8px);
         padding: 1.5rem;
-        border-radius: 8px;
-        border-left: 4px solid var(--color-info);
-        font-size: 0.9rem;
-        color: var(--text-muted);
+        border-radius: 12px;
+        border-left: 4px solid var(--accent);
+        font-size: 0.95rem;
+        color: var(--text-main);
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
     }
 
     .explanation-panel strong { color: var(--text-main); }
@@ -222,38 +246,46 @@
     .diagram-area {
         position: relative;
         min-height: 400px;
-        background: #F8FAFC;
+        background: rgba(248, 250, 252, 0.6);
+        backdrop-filter: blur(4px);
         border-radius: var(--radius);
         border: 1px solid var(--border);
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding: 2rem;
-        gap: 1rem;
+        gap: 1.5rem;
     }
 
     .block {
         position: relative;
-        background: var(--panel-bg);
+        background: #FFFFFF;
         border: 1px solid var(--border);
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        padding: 1rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        padding: 1.5rem 1rem;
         text-align: center;
-        transition: var(--transition);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
         z-index: 2;
-        width: 30%;
-        min-width: 150px;
+        flex: 1;
+        min-width: 130px;
     }
 
-    .block-title { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem; }
-    .block-val { font-family: monospace; font-size: 1.2rem; font-weight: 600; color: var(--accent); }
-    .block-split { display: flex; gap: 0.5rem; margin-top: 0.5rem; justify-content: center; }
-    .split-item { background: var(--bg-color); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; border: 1px solid var(--border); }
+    .block:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08);
+    }
 
-    .pt-table { border-collapse: collapse; width: 100%; margin-top: 0.5rem; font-size: 0.85rem; }
-    .pt-table th, .pt-table td { border: 1px solid var(--border); padding: 0.4rem; text-align: center; }
-    .pt-table tr.highlight { background: rgba(59, 130, 246, 0.1); font-weight: 600; color: var(--color-info); }
+    .block-title { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 0.05em; }
+    .block-val { font-family: monospace; font-size: 1.4rem; font-weight: 600; color: var(--accent); }
+    .block-split { display: flex; gap: 0.5rem; margin-top: 0.75rem; justify-content: center; }
+    .split-item { background: var(--bg-color); padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.85rem; border: 1px solid var(--border); color: var(--text-main); font-weight: 500;}
+
+    .pt-table { border-collapse: separate; border-spacing: 0; width: 100%; margin-top: 0.75rem; font-size: 0.85rem; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+    .pt-table th { background: rgba(241, 245, 249, 0.8); padding: 0.5rem; text-align: center; border-bottom: 1px solid var(--border); color: var(--text-main); font-weight: 600; }
+    .pt-table td { padding: 0.5rem; text-align: center; border-bottom: 1px solid var(--border); }
+    .pt-table tr:last-child td { border-bottom: none; }
+    .pt-table tr.highlight { background: rgba(59, 130, 246, 0.1); font-weight: 600; color: var(--accent); }
 
     #paging-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
 
@@ -292,14 +324,14 @@
     }
     .frame-lbl { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
     .frame-box {
-        width: 100%; height: 80px; background: var(--bg-color); border: 2px dashed var(--border);
-        border-radius: 8px; display: flex; align-items: center; justify-content: center;
-        font-size: 1.5rem; font-weight: 600; transition: var(--transition); position: relative;
+        width: 100%; height: 80px; background: rgba(248, 250, 252, 0.8); border: 2px dashed var(--border);
+        border-radius: 12px; display: flex; align-items: center; justify-content: center;
+        font-size: 1.75rem; font-weight: 600; transition: var(--transition); position: relative;
     }
-    .frame-box.filled { background: var(--panel-bg); border-style: solid; border-color: var(--border); }
-    .frame-box.hit { border-color: var(--color-hit); background: rgba(16, 185, 129, 0.05); color: var(--color-hit); }
-    .frame-box.fault { border-color: var(--color-fault); background: rgba(239, 68, 68, 0.05); color: var(--color-fault); }
-    .frame-box.evict { border-color: var(--color-evict); background: rgba(245, 158, 11, 0.05); color: var(--color-evict); }
+    .frame-box.filled { background: #FFFFFF; border-style: solid; border-color: rgba(148, 163, 184, 0.5); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    .frame-box.hit { border-color: var(--color-hit); background: rgba(16, 185, 129, 0.1); color: var(--color-hit); box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
+    .frame-box.fault { border-color: var(--color-fault); background: rgba(239, 68, 68, 0.1); color: var(--color-fault); box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
+    .frame-box.evict { border-color: var(--color-evict); background: rgba(245, 158, 11, 0.1); color: var(--color-evict); box-shadow: 0 0 15px rgba(245, 158, 11, 0.2); }
 
     .slide-in { animation: slideIn 0.3s ease forwards; }
     .pop-in { animation: popIn 0.3s ease forwards; }
@@ -311,11 +343,13 @@
     .disk-canvas-wrap {
         width: 100%;
         height: 400px;
-        background: #F8FAFC;
-        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.5);
+        backdrop-filter: blur(8px);
+        border-radius: 12px;
         border: 1px solid var(--border);
         position: relative;
         overflow: hidden;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
     }
     canvas { width: 100%; height: 100%; display: block; }
     /* Charts */
@@ -409,7 +443,7 @@
                         </div>
                     </div>
 
-                    <div class="block" id="blk-tlb" style="min-width: 120px;">
+                    <div class="block" id="blk-tlb">
                         <div class="block-title" title="Translation Lookaside Buffer">TLB Cache</div>
                         <table class="pt-table" id="tlb-table">
                             <tr><th>Page</th><th>Frame</th></tr>
