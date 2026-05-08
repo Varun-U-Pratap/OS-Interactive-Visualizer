@@ -1,0 +1,608 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);font-size:14px;color:var(--color-text-primary)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 0 1rem;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:1.25rem}
+.topbar-title{font-size:18px;font-weight:500}
+.topbar-sub{font-size:12px;color:var(--color-text-secondary);margin-top:2px}
+.module-tabs{display:flex;gap:0;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;margin-bottom:1.5rem}
+.module-tab{flex:1;padding:8px 12px;font-size:13px;font-weight:500;background:transparent;border:none;cursor:pointer;color:var(--color-text-secondary);border-right:0.5px solid var(--color-border-tertiary);transition:background 0.15s}
+.module-tab:last-child{border-right:none}
+.module-tab.active{background:var(--color-background-secondary);color:var(--color-text-primary)}
+.ctrl-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem}
+.ctrl-group{display:flex;flex-direction:column;gap:5px}
+.ctrl-label{font-size:12px;color:var(--color-text-secondary)}
+.algo-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.25rem}
+.algo-pill{padding:5px 12px;font-size:12px;font-weight:500;border-radius:20px;cursor:pointer;border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-secondary);transition:all 0.15s}
+.algo-pill.active{background:#EEEDFE;color:#3C3489;border-color:#AFA9EC}
+.section-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.7px;color:var(--color-text-tertiary);margin-bottom:10px}
+.metrics-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.25rem}
+.metric{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px;text-align:center}
+.metric-val{font-size:20px;font-weight:500}
+.metric-lbl{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.v-purple{color:#534AB7}
+.v-teal{color:#1D9E75}
+.v-coral{color:#D85A30}
+.disk-viz-wrap{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:16px;margin-bottom:1.25rem;overflow:hidden}
+.gantt-wrap{overflow-x:auto;margin-bottom:1.25rem}
+.gantt-canvas-wrap{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:16px}
+.btn-row{display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center}
+.log-box{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px;font-size:12px;font-family:var(--font-mono);color:var(--color-text-secondary);line-height:2;margin-bottom:1.25rem;min-height:40px}
+.cmp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1.25rem}
+.cmp-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:.9rem;text-align:center}
+.cmp-card.best{border:2px solid #5DCAA5}
+.cmp-name{font-size:11px;font-weight:500;color:var(--color-text-secondary);margin-bottom:4px}
+.cmp-val{font-size:22px;font-weight:500}
+.cmp-lbl{font-size:11px;color:var(--color-text-secondary)}
+.best-badge{font-size:10px;background:#E1F5EE;color:#085041;padding:2px 8px;border-radius:10px;margin-bottom:4px;display:inline-block}
+.speed-row{display:flex;align-items:center;gap:10px;margin-bottom:1rem}
+.divider{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:1.25rem 0}
+</style>
+
+<h2 class="sr-only">Disk scheduling simulator — interactive visualizer for FCFS, SSTF, SCAN, C-SCAN, LOOK, and C-LOOK algorithms from Dr. Sangeetha's OS Unit 4 syllabus</h2>
+
+<div class="topbar">
+  <div>
+    <div class="topbar-title"><i class="ti ti-disc" style="font-size:18px;margin-right:6px;vertical-align:-2px" aria-hidden="true"></i>OS Visualizer Suite</div>
+    <div class="topbar-sub">Memory Pager · Disk Scheduler — Unit 3 & 4</div>
+  </div>
+  <span id="active-badge" style="font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;background:#EEEDFE;color:#3C3489">Disk Scheduler</span>
+</div>
+
+<div class="module-tabs">
+  <button class="module-tab" onclick="showModule('mem',this)"><i class="ti ti-layout-grid" style="font-size:14px;margin-right:4px" aria-hidden="true"></i>Memory Pager</button>
+  <button class="module-tab active" onclick="showModule('disk',this)"><i class="ti ti-disc" style="font-size:14px;margin-right:4px" aria-hidden="true"></i>Disk Scheduler</button>
+  <button class="module-tab" onclick="showModule('compare',this)"><i class="ti ti-chart-bar" style="font-size:14px;margin-right:4px" aria-hidden="true"></i>Compare All</button>
+</div>
+
+<div id="panel-mem" style="display:none">
+  <div class="ctrl-row">
+    <div class="ctrl-group">
+      <span class="ctrl-label">Page reference string</span>
+      <input id="p-refs" type="text" value="7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1" style="font-family:var(--font-mono);font-size:13px"/>
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">Frames: <span id="pf-val">3</span></span>
+      <input type="range" id="p-frames" min="1" max="6" value="3" step="1"/>
+    </div>
+  </div>
+  <div class="algo-pills" id="mem-algo-pills">
+    <button class="algo-pill active" onclick="selectMemAlgo('FIFO',this)">FIFO</button>
+    <button class="algo-pill" onclick="selectMemAlgo('LRU',this)">LRU</button>
+    <button class="algo-pill" onclick="selectMemAlgo('Optimal',this)">Optimal</button>
+  </div>
+  <div class="section-label">Reference string</div>
+  <div id="p-ref-track" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:1.25rem;padding:10px;background:var(--color-background-secondary);border-radius:var(--border-radius-md)"></div>
+  <div class="section-label">Frame state</div>
+  <div id="p-frames-disp" style="display:flex;gap:8px;margin-bottom:1.25rem"></div>
+  <div class="metrics-row">
+    <div class="metric"><div class="metric-val v-coral" id="p-m-faults">0</div><div class="metric-lbl">page faults</div></div>
+    <div class="metric"><div class="metric-val v-teal" id="p-m-hits">0</div><div class="metric-lbl">page hits</div></div>
+    <div class="metric"><div class="metric-val v-purple" id="p-m-rate">0%</div><div class="metric-lbl">hit rate</div></div>
+  </div>
+  <div class="log-box" id="p-log">Press Step or Run to begin.</div>
+  <div class="btn-row">
+    <button onclick="pStep()"><i class="ti ti-arrow-right" style="font-size:14px;margin-right:4px" aria-hidden="true"></i>Step</button>
+    <button onclick="pRun()"><i class="ti ti-player-play" style="font-size:14px;margin-right:4px" aria-hidden="true"></i>Run all</button>
+    <button onclick="pInit()"><i class="ti ti-refresh" style="font-size:14px;margin-right:4px" aria-hidden="true"></i>Reset</button>
+    <span id="p-step-lbl" style="font-size:12px;color:var(--color-text-tertiary);margin-left:4px">step 0/0</span>
+  </div>
+  <div class="section-label">Step history</div>
+  <div style="overflow-x:auto;margin-bottom:1rem"><table id="p-hist-table" style="border-collapse:collapse;width:100%;min-width:380px;font-size:12px">
+    <thead><tr id="p-hist-head" style="border-bottom:0.5px solid var(--color-border-tertiary)"></tr></thead>
+    <tbody id="p-hist-body"></tbody>
+  </table></div>
+</div>
+
+<div id="panel-disk">
+  <div class="ctrl-row">
+    <div class="ctrl-group">
+      <span class="ctrl-label">Request queue (cylinder numbers)</span>
+      <input id="d-queue" type="text" value="98 183 37 122 14 124 65 67" style="font-family:var(--font-mono);font-size:13px"/>
+    </div>
+    <div class="ctrl-group" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="ctrl-group">
+        <span class="ctrl-label">Head start</span>
+        <input id="d-head" type="number" value="53" min="0" max="199" style="font-size:13px"/>
+      </div>
+      <div class="ctrl-group">
+        <span class="ctrl-label">Max cylinder</span>
+        <input id="d-max" type="number" value="199" min="50" max="9999" style="font-size:13px"/>
+      </div>
+    </div>
+  </div>
+  <div class="algo-pills" id="disk-pills">
+    <button class="algo-pill active" onclick="selectDiskAlgo('FCFS',this)">FCFS</button>
+    <button class="algo-pill" onclick="selectDiskAlgo('SSTF',this)">SSTF</button>
+    <button class="algo-pill" onclick="selectDiskAlgo('SCAN',this)">SCAN</button>
+    <button class="algo-pill" onclick="selectDiskAlgo('C-SCAN',this)">C-SCAN</button>
+    <button class="algo-pill" onclick="selectDiskAlgo('LOOK',this)">LOOK</button>
+    <button class="algo-pill" onclick="selectDiskAlgo('C-LOOK',this)">C-LOOK</button>
+  </div>
+
+  <div class="metrics-row">
+    <div class="metric"><div class="metric-val v-purple" id="d-total">0</div><div class="metric-lbl">total movement</div></div>
+    <div class="metric"><div class="metric-val v-teal" id="d-avg">0</div><div class="metric-lbl">avg seek</div></div>
+    <div class="metric"><div class="metric-val v-coral" id="d-step-m">—</div><div class="metric-lbl">current step</div></div>
+  </div>
+
+  <div class="section-label">Disk arm animation</div>
+  <div class="disk-viz-wrap">
+    <canvas id="disk-canvas" height="130"></canvas>
+  </div>
+
+  <div class="section-label">Seek path Gantt chart</div>
+  <div class="gantt-wrap">
+    <div class="gantt-canvas-wrap">
+      <canvas id="gantt-canvas" height="200"></canvas>
+    </div>
+  </div>
+
+  <div class="log-box" id="d-log">Select an algorithm and press Run to begin animation.</div>
+
+  <div class="btn-row">
+    <button onclick="dStep()"><i class="ti ti-arrow-right" style="font-size:14px;margin-right:4px" aria-hidden="true"></i>Step</button>
+    <button onclick="dRun()" id="d-run-btn"><i class="ti ti-player-play" style="font-size:14px;margin-right:4px" aria-hidden="true"></i>Run</button>
+    <button onclick="dInit()"><i class="ti ti-refresh" style="font-size:14px;margin-right:4px" aria-hidden="true"></i>Reset</button>
+    <div class="speed-row" style="margin:0;margin-left:8px">
+      <span style="font-size:12px;color:var(--color-text-secondary)">Speed</span>
+      <input type="range" id="speed-sl" min="1" max="5" value="3" step="1" style="width:80px"/>
+      <span id="speed-lbl" style="font-size:12px;color:var(--color-text-secondary)">3×</span>
+    </div>
+    <span id="d-step-lbl" style="font-size:12px;color:var(--color-text-tertiary);margin-left:4px">step 0/0</span>
+  </div>
+
+  <div class="section-label">Seek order details</div>
+  <div style="overflow-x:auto;margin-bottom:1rem">
+    <table id="d-hist-table" style="border-collapse:collapse;width:100%;min-width:360px;font-size:12px">
+      <thead><tr style="border-bottom:0.5px solid var(--color-border-tertiary)">
+        <th style="padding:5px 8px;text-align:center;font-weight:500;color:var(--color-text-tertiary)">Step</th>
+        <th style="padding:5px 8px;text-align:center;font-weight:500;color:var(--color-text-tertiary)">From</th>
+        <th style="padding:5px 8px;text-align:center;font-weight:500;color:var(--color-text-tertiary)">To</th>
+        <th style="padding:5px 8px;text-align:center;font-weight:500;color:var(--color-text-tertiary)">Movement</th>
+        <th style="padding:5px 8px;text-align:left;font-weight:500;color:var(--color-text-tertiary)">Cumulative</th>
+      </tr></thead>
+      <tbody id="d-hist-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="panel-compare" style="display:none">
+  <div class="ctrl-row">
+    <div class="ctrl-group">
+      <span class="ctrl-label">Request queue</span>
+      <input id="cmp-queue" type="text" value="98 183 37 122 14 124 65 67" style="font-family:var(--font-mono);font-size:13px"/>
+    </div>
+    <div class="ctrl-group" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="ctrl-group"><span class="ctrl-label">Head start</span><input id="cmp-head" type="number" value="53" style="font-size:13px"/></div>
+      <div class="ctrl-group"><span class="ctrl-label">Max cylinder</span><input id="cmp-max" type="number" value="199" style="font-size:13px"/></div>
+    </div>
+  </div>
+  <button onclick="buildCompare()" style="margin-bottom:1.25rem;font-size:13px"><i class="ti ti-chart-bar" style="font-size:14px;margin-right:4px" aria-hidden="true"></i>Compare all algorithms</button>
+  <div class="section-label">Total head movements</div>
+  <div class="cmp-grid" id="cmp-grid"></div>
+  <div class="section-label">Visual bar comparison</div>
+  <canvas id="cmp-bar" height="180" style="margin-bottom:1.5rem"></canvas>
+  <div class="section-label">Seek path overlay</div>
+  <div class="gantt-canvas-wrap" style="margin-bottom:1.5rem">
+    <canvas id="cmp-path" height="220"></canvas>
+  </div>
+</div>
+
+<script>
+const ALGOS_DISK=['FCFS','SSTF','SCAN','C-SCAN','LOOK','C-LOOK'];
+const ALGO_COLORS=['#534AB7','#1D9E75','#D85A30','#BA7517','#185FA5','#993556'];
+let dAlgo='FCFS', dSeq=[], dIdx=0, dPos=0, dTotal=0, dRunning=false, dAnimFrame=null;
+let dFullSeq=[], dMaxCyl=199, dInitHead=53;
+let memAlgo='FIFO', pRefs=[], pNF=3, pIdx=0, pFrames=[], pHistory=[], pRunning=false;
+
+document.getElementById('p-frames').oninput=function(){document.getElementById('pf-val').textContent=this.value;pInit();};
+document.getElementById('speed-sl').oninput=function(){document.getElementById('speed-lbl').textContent=this.value+'×';};
+
+function showModule(m,btn){
+  ['mem','disk','compare'].forEach(p=>{document.getElementById('panel-'+p).style.display='none';});
+  document.getElementById('panel-'+m).style.display='block';
+  document.querySelectorAll('.module-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  const labels={'mem':'Memory Pager','disk':'Disk Scheduler','compare':'Compare All'};
+  document.getElementById('active-badge').textContent=labels[m];
+  if(m==='disk'){dInit();}
+  if(m==='mem'){pInit();}
+  if(m==='compare'){buildCompare();}
+}
+
+function selectDiskAlgo(a,btn){
+  dAlgo=a;
+  document.querySelectorAll('#disk-pills .algo-pill').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  dInit();
+}
+function selectMemAlgo(a,btn){
+  memAlgo=a;
+  document.querySelectorAll('#mem-algo-pills .algo-pill').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  pInit();
+}
+
+function parseDQueue(){return document.getElementById('d-queue').value.trim().split(/\s+/).map(Number).filter(n=>!isNaN(n)&&n>=0);}
+function computeDiskSeq(algo, queue, head, maxCyl){
+  let seq=[head], q=[...queue], pos=head, total=0;
+  if(algo==='FCFS'){
+    q.forEach(c=>{seq.push(c);total+=Math.abs(c-pos);pos=c;});
+  } else if(algo==='SSTF'){
+    let rem=[...q];
+    while(rem.length){
+      let best=rem.reduce((a,b)=>Math.abs(b-pos)<Math.abs(a-pos)?b:a);
+      total+=Math.abs(best-pos);pos=best;seq.push(best);
+      rem.splice(rem.indexOf(best),1);
+    }
+  } else if(algo==='SCAN'){
+    let up=q.filter(c=>c>=pos).sort((a,b)=>a-b);
+    let down=q.filter(c=>c<pos).sort((a,b)=>b-a);
+    up.forEach(c=>{total+=Math.abs(c-pos);pos=c;seq.push(c);});
+    if(up.length){total+=Math.abs(maxCyl-pos);pos=maxCyl;seq.push(maxCyl);}
+    down.forEach(c=>{total+=Math.abs(c-pos);pos=c;seq.push(c);});
+  } else if(algo==='C-SCAN'){
+    let up=q.filter(c=>c>=pos).sort((a,b)=>a-b);
+    let down=q.filter(c=>c<pos).sort((a,b)=>a-b);
+    up.forEach(c=>{total+=Math.abs(c-pos);pos=c;seq.push(c);});
+    total+=Math.abs(maxCyl-pos);pos=maxCyl;seq.push(maxCyl);
+    total+=maxCyl;pos=0;seq.push(0);
+    down.forEach(c=>{total+=Math.abs(c-pos);pos=c;seq.push(c);});
+  } else if(algo==='LOOK'){
+    let up=q.filter(c=>c>=pos).sort((a,b)=>a-b);
+    let down=q.filter(c=>c<pos).sort((a,b)=>b-a);
+    up.forEach(c=>{total+=Math.abs(c-pos);pos=c;seq.push(c);});
+    down.forEach(c=>{total+=Math.abs(c-pos);pos=c;seq.push(c);});
+  } else if(algo==='C-LOOK'){
+    let up=q.filter(c=>c>=pos).sort((a,b)=>a-b);
+    let down=q.filter(c=>c<pos).sort((a,b)=>a-b);
+    up.forEach(c=>{total+=Math.abs(c-pos);pos=c;seq.push(c);});
+    if(down.length){total+=Math.abs(up[up.length-1]-down[0])||0;pos=down[0];seq.push(down[0]);
+      for(let i=1;i<down.length;i++){total+=Math.abs(down[i]-pos);pos=down[i];seq.push(down[i]);}}
+  }
+  return{seq,total};
+}
+
+let dAnim={seq:[],idx:0,animPos:0,prevAnimPos:0,running:false,raf:null};
+
+function dInit(){
+  if(dAnim.raf){cancelAnimationFrame(dAnim.raf);dAnim.running=false;}
+  const queue=parseDQueue();
+  dMaxCyl=parseInt(document.getElementById('d-max').value)||199;
+  dInitHead=parseInt(document.getElementById('d-head').value)||53;
+  const {seq,total}=computeDiskSeq(dAlgo,queue,dInitHead,dMaxCyl);
+  dFullSeq=seq; dIdx=1; dTotal=0;
+  dAnim={seq,idx:1,animPos:dInitHead,prevAnimPos:dInitHead,running:false,raf:null};
+  document.getElementById('d-total').textContent='0';
+  document.getElementById('d-avg').textContent='0';
+  document.getElementById('d-step-m').textContent='—';
+  document.getElementById('d-step-lbl').textContent='step 0/'+(seq.length-1);
+  document.getElementById('d-log').textContent='Ready. Press Step or Run.';
+  document.getElementById('d-hist-body').innerHTML='';
+  drawDiskCanvas(dInitHead,-1,seq,0);
+  drawGantt(seq,1,false);
+}
+
+function drawDiskCanvas(headPos, prevPos, seq, stepIdx){
+  const canvas=document.getElementById('disk-canvas');
+  const W=canvas.parentElement.offsetWidth-32||600;
+  canvas.width=W; canvas.height=130;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,130);
+  const PAD=40, trackW=W-PAD*2, cy=80;
+  const toX=c=>PAD+Math.round((c/dMaxCyl)*trackW);
+
+  ctx.fillStyle='#888780'; ctx.font='10px sans-serif';
+  [0,Math.round(dMaxCyl/4),Math.round(dMaxCyl/2),Math.round(dMaxCyl*3/4),dMaxCyl].forEach(v=>{
+    const x=toX(v);
+    ctx.fillRect(x,cy-6,1,12);
+    ctx.textAlign='center'; ctx.fillText(v,x,cy+22);
+  });
+  ctx.fillRect(PAD,cy,trackW,1.5);
+
+  const visited=seq.slice(0,stepIdx+1);
+  for(let i=1;i<visited.length;i++){
+    const x1=toX(visited[i-1]), x2=toX(visited[i]);
+    ctx.strokeStyle='#AFA9EC'; ctx.lineWidth=1.5; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(x1,cy); ctx.lineTo(x2,cy); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  seq.forEach((c,i)=>{
+    if(i===0) return;
+    const x=toX(c);
+    const visited2=i<stepIdx;
+    ctx.beginPath(); ctx.arc(x,cy,5,0,Math.PI*2);
+    ctx.fillStyle=visited2?'#AFA9EC':'var(--color-background-secondary)';
+    ctx.strokeStyle=visited2?'#534AB7':'var(--color-border-secondary)';
+    ctx.lineWidth=1; ctx.fill(); ctx.stroke();
+    ctx.fillStyle=visited2?'#3C3489':'var(--color-text-tertiary)';
+    ctx.font='9px sans-serif'; ctx.textAlign='center'; ctx.fillText(c,x,cy-10);
+  });
+
+  const hx=toX(headPos);
+  ctx.beginPath(); ctx.moveTo(hx,cy-28); ctx.lineTo(hx+7,cy-14); ctx.lineTo(hx-7,cy-14); ctx.closePath();
+  ctx.fillStyle='#534AB7'; ctx.fill();
+  ctx.fillStyle='#534AB7'; ctx.font='500 11px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('HEAD',hx,cy-32);
+  ctx.beginPath(); ctx.moveTo(hx,cy-14); ctx.lineTo(hx,cy); ctx.strokeStyle='#534AB7'; ctx.lineWidth=2; ctx.stroke();
+}
+
+function drawGantt(seq, upToIdx, animated){
+  const canvas=document.getElementById('gantt-canvas');
+  const W=canvas.parentElement.offsetWidth-32||600;
+  const steps=seq.length-1;
+  const BAR_W=Math.max(18,Math.min(44,Math.floor((W-80)/Math.max(steps,1))));
+  canvas.width=Math.max(W,80+steps*BAR_W); canvas.height=200;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,200);
+  const PAD_L=50, PAD_T=20, BAR_H=80, Y=PAD_T+BAR_H;
+  const maxC=dMaxCyl;
+  const toY=c=>PAD_T+(1-c/maxC)*BAR_H;
+
+  ctx.strokeStyle='rgba(180,180,180,0.2)'; ctx.lineWidth=0.5; ctx.setLineDash([2,4]);
+  [0,.25,.5,.75,1].forEach(f=>{const y=PAD_T+f*BAR_H; ctx.beginPath(); ctx.moveTo(PAD_L,y); ctx.lineTo(canvas.width-10,y); ctx.stroke();});
+  ctx.setLineDash([]);
+  ctx.fillStyle='#888780'; ctx.font='9px sans-serif'; ctx.textAlign='right';
+  [0,.25,.5,.75,1].forEach(f=>{const y=PAD_T+f*BAR_H; ctx.fillText(Math.round(maxC*(1-f)),PAD_L-4,y+3);});
+
+  for(let i=0;i<Math.min(upToIdx,seq.length-1);i++){
+    const x=PAD_L+i*BAR_W+BAR_W/2;
+    const y1=toY(seq[i]), y2=toY(seq[i+1]);
+    const frac=i/(steps-1||1);
+    const r=Math.round(83+frac*(25-83)), g=Math.round(74+frac*(158-74)), b=Math.round(183+frac*(117-183));
+    ctx.beginPath(); ctx.moveTo(x,y1); ctx.lineTo(x,y2);
+    ctx.strokeStyle=`rgb(${r},${g},${b})`; ctx.lineWidth=2.5; ctx.stroke();
+    ctx.beginPath(); ctx.arc(x,y1,4,0,Math.PI*2);
+    ctx.fillStyle=`rgb(${r},${g},${b})`; ctx.fill();
+    ctx.fillStyle='var(--color-text-tertiary)'; ctx.font='9px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(seq[i],x,Y+14+(i%2)*10);
+  }
+  if(upToIdx>0&&upToIdx<=seq.length-1){
+    const xi=PAD_L+(upToIdx-1)*BAR_W+BAR_W/2;
+    const yi=toY(seq[upToIdx]);
+    ctx.beginPath(); ctx.arc(xi,yi,5,0,Math.PI*2);
+    ctx.fillStyle='#534AB7'; ctx.fill();
+    ctx.fillStyle='#534AB7'; ctx.font='500 10px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(seq[upToIdx],xi,yi-10);
+  }
+  ctx.fillStyle='#888780'; ctx.font='500 10px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('Cylinder →',PAD_L,canvas.height-4);
+  ctx.fillStyle='#888780'; ctx.font='10px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('Step →',canvas.width/2,canvas.height-4);
+}
+
+function dStep(){
+  if(dAnim.idx>=dFullSeq.length) return;
+  const from=dFullSeq[dAnim.idx-1], to=dFullSeq[dAnim.idx];
+  const move=Math.abs(to-from);
+  dTotal+=move; dAnim.idx++;
+  animateHead(from,to,()=>{
+    updateDMetrics(dAnim.idx-1);
+    drawGantt(dFullSeq,dAnim.idx-1,false);
+    addDHistRow(dAnim.idx-1,from,to,move,dTotal);
+    document.getElementById('d-log').innerHTML=`Step ${dAnim.idx-1}: head <strong>${from}</strong> → <strong>${to}</strong> &nbsp;|&nbsp; movement: <strong>${move}</strong>`;
+    document.getElementById('d-step-lbl').textContent=`step ${dAnim.idx-1}/${dFullSeq.length-1}`;
+  });
+}
+
+function animateHead(from,to,cb){
+  const canvas=document.getElementById('disk-canvas');
+  const duration=280/parseInt(document.getElementById('speed-sl').value);
+  const start=performance.now();
+  function frame(now){
+    const t=Math.min(1,(now-start)/duration);
+    const ease=t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+    const cur=from+(to-from)*ease;
+    drawDiskCanvas(cur,-1,dFullSeq,dAnim.idx-1);
+    if(t<1){requestAnimationFrame(frame);}else{drawDiskCanvas(to,-1,dFullSeq,dAnim.idx-1);if(cb)cb();}
+  }
+  requestAnimationFrame(frame);
+}
+
+function updateDMetrics(stepIdx){
+  document.getElementById('d-total').textContent=dTotal;
+  document.getElementById('d-avg').textContent=(dTotal/(stepIdx||1)).toFixed(1);
+  document.getElementById('d-step-m').textContent=dFullSeq[stepIdx]??'—';
+}
+
+async function dRun(){
+  if(dAnim.running) return;
+  dAnim.running=true;
+  const btn=document.getElementById('d-run-btn');
+  btn.innerHTML='<i class="ti ti-player-pause" style="font-size:14px;margin-right:4px" aria-hidden="true"></i>Running...';
+  while(dAnim.idx<dFullSeq.length&&dAnim.running){
+    await new Promise(res=>{
+      const from=dFullSeq[dAnim.idx-1], to=dFullSeq[dAnim.idx];
+      const move=Math.abs(to-from);
+      dTotal+=move; dAnim.idx++;
+      animateHead(from,to,()=>{
+        updateDMetrics(dAnim.idx-1);
+        drawGantt(dFullSeq,dAnim.idx-1,false);
+        addDHistRow(dAnim.idx-1,from,to,move,dTotal);
+        document.getElementById('d-log').innerHTML=`Step ${dAnim.idx-1}: head <strong>${from}</strong> → <strong>${to}</strong> &nbsp;|&nbsp; movement: <strong>${move}</strong>`;
+        document.getElementById('d-step-lbl').textContent=`step ${dAnim.idx-1}/${dFullSeq.length-1}`;
+        setTimeout(res,80/parseInt(document.getElementById('speed-sl').value));
+      });
+    });
+  }
+  dAnim.running=false;
+  btn.innerHTML='<i class="ti ti-player-play" style="font-size:14px;margin-right:4px" aria-hidden="true"></i>Run';
+  if(dAnim.idx>=dFullSeq.length) document.getElementById('d-log').innerHTML+=` &nbsp;✓ <strong>Done!</strong> Total: <strong>${dTotal}</strong> cylinders`;
+}
+
+function addDHistRow(step,from,to,move,cum){
+  const tb=document.getElementById('d-hist-body');
+  const tr=document.createElement('tr');
+  tr.style.cssText='border-bottom:0.5px solid var(--color-border-tertiary);animation:fadeIn 0.3s ease';
+  tr.innerHTML=`<td style="padding:5px 8px;text-align:center;font-family:var(--font-mono)">${step}</td>
+    <td style="padding:5px 8px;text-align:center;font-family:var(--font-mono)">${from}</td>
+    <td style="padding:5px 8px;text-align:center;font-family:var(--font-mono);font-weight:500">${to}</td>
+    <td style="padding:5px 8px;text-align:center;font-family:var(--font-mono);color:#D85A30">+${move}</td>
+    <td style="padding:5px 8px;font-family:var(--font-mono);color:#534AB7;font-weight:500">${cum}</td>`;
+  tb.appendChild(tr);
+  tb.scrollTop=tb.scrollHeight;
+}
+
+function buildCompare(){
+  const q=document.getElementById('cmp-queue').value.trim().split(/\s+/).map(Number).filter(n=>!isNaN(n));
+  const head=parseInt(document.getElementById('cmp-head').value)||53;
+  const mx=parseInt(document.getElementById('cmp-max').value)||199;
+  const results={};
+  ALGOS_DISK.forEach(a=>{results[a]=computeDiskSeq(a,q,head,mx);});
+  const min=Math.min(...ALGOS_DISK.map(a=>results[a].total));
+  const grid=document.getElementById('cmp-grid');
+  grid.innerHTML=ALGOS_DISK.map((a,i)=>{
+    const r=results[a], isBest=r.total===min;
+    return `<div class="cmp-card${isBest?' best':''}">
+      ${isBest?'<div class="best-badge">fewest moves</div>':'<div style="height:18px"></div>'}
+      <div class="cmp-name">${a}</div>
+      <div class="cmp-val" style="color:${ALGO_COLORS[i]}">${r.total}</div>
+      <div class="cmp-lbl">cylinders</div>
+    </div>`;
+  }).join('');
+
+  const barCanvas=document.getElementById('cmp-bar');
+  const W=barCanvas.parentElement.offsetWidth||600;
+  barCanvas.width=W; barCanvas.height=180;
+  const ctx=barCanvas.getContext('2d');
+  ctx.clearRect(0,0,W,180);
+  const maxT=Math.max(...ALGOS_DISK.map(a=>results[a].total));
+  const bW=Math.floor((W-40)/ALGOS_DISK.length)-8;
+  ALGOS_DISK.forEach((a,i)=>{
+    const val=results[a].total, bH=Math.round((val/maxT)*120);
+    const x=20+i*(bW+8), y=150-bH;
+    ctx.fillStyle=ALGO_COLORS[i]; ctx.fillRect(x,y,bW,bH);
+    ctx.fillStyle='var(--color-text-secondary)'; ctx.font='500 10px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(a,x+bW/2,168);
+    ctx.fillStyle=ALGO_COLORS[i]; ctx.font='500 11px sans-serif';
+    ctx.fillText(val,x+bW/2,y-4);
+  });
+
+  const pathCanvas=document.getElementById('cmp-path');
+  const PW=pathCanvas.parentElement.offsetWidth-32||560;
+  const maxSeqLen=Math.max(...ALGOS_DISK.map(a=>results[a].seq.length));
+  pathCanvas.width=Math.max(PW,maxSeqLen*20+80); pathCanvas.height=220;
+  const pctx=pathCanvas.getContext('2d');
+  pctx.clearRect(0,0,pathCanvas.width,220);
+  const PP=40, PH=160, PT=20;
+  const toY=c=>PT+(1-c/mx)*PH;
+  pctx.strokeStyle='rgba(180,180,180,0.15)'; pctx.lineWidth=0.5; pctx.setLineDash([2,4]);
+  [0,.5,1].forEach(f=>{const y=PT+f*PH; pctx.beginPath(); pctx.moveTo(PP,y); pctx.lineTo(pathCanvas.width-10,y); pctx.stroke();});
+  pctx.setLineDash([]);
+  pctx.fillStyle='#888780'; pctx.font='9px sans-serif'; pctx.textAlign='right';
+  [0,.5,1].forEach(f=>{pctx.fillText(Math.round(mx*(1-f)),PP-4,PT+f*PH+3);});
+  ALGOS_DISK.forEach((a,ai)=>{
+    const seq=results[a].seq;
+    const stepW=Math.max(14,Math.floor((pathCanvas.width-PP-20)/Math.max(seq.length-1,1)));
+    pctx.beginPath();
+    seq.forEach((c,i)=>{const x=PP+i*stepW, y=toY(c); i===0?pctx.moveTo(x,y):pctx.lineTo(x,y);});
+    pctx.strokeStyle=ALGO_COLORS[ai]; pctx.lineWidth=1.5; pctx.stroke();
+  });
+  pctx.fillStyle='#888780'; pctx.font='9px sans-serif'; pctx.textAlign='left';
+  ALGOS_DISK.forEach((a,i)=>{
+    pctx.fillStyle=ALGO_COLORS[i]; pctx.fillRect(PP+i*70,PT+PH+14,10,3);
+    pctx.fillStyle='var(--color-text-secondary)'; pctx.font='9px sans-serif';
+    pctx.fillText(a,PP+i*70+14,PT+PH+18);
+  });
+}
+
+function pInit(){
+  pRefs=document.getElementById('p-refs').value.trim().split(/\s+/).map(Number).filter(n=>!isNaN(n));
+  pNF=parseInt(document.getElementById('p-frames').value); pIdx=0; pFrames=[]; pHistory=[];
+  renderPTrack(); renderPFrames([],Array(pNF).fill(null));
+  ['p-m-faults','p-m-hits'].forEach(id=>document.getElementById(id).textContent='0');
+  document.getElementById('p-m-rate').textContent='0%';
+  document.getElementById('p-step-lbl').textContent='step 0/'+pRefs.length;
+  document.getElementById('p-log').textContent='Press Step or Run to begin.';
+  buildPHistHead(); document.getElementById('p-hist-body').innerHTML='';
+}
+
+function renderPTrack(){
+  document.getElementById('p-ref-track').innerHTML=pRefs.map((p,i)=>
+    `<div id="pchip-${i}" style="min-width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:13px;font-weight:500;border:1.5px solid var(--color-border-tertiary);background:var(--color-background-primary);color:var(--color-text-secondary);transition:all 0.2s">${p}</div>`
+  ).join('');
+}
+
+function renderPFrames(fr, statuses){
+  const el=document.getElementById('p-frames-disp'); el.innerHTML='';
+  for(let j=0;j<pNF;j++){
+    const col=document.createElement('div');
+    col.style.cssText='flex:1;display:flex;flex-direction:column;gap:4px';
+    const lbl=document.createElement('div');
+    lbl.style.cssText='font-size:11px;color:var(--color-text-tertiary);text-align:center;margin-bottom:2px';
+    lbl.textContent='F'+j; col.appendChild(lbl);
+    const cell=document.createElement('div');
+    cell.style.cssText='height:36px;border-radius:var(--border-radius-md);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;transition:all 0.25s;border:0.5px solid var(--color-border-tertiary)';
+    const val=fr[j]!==undefined?fr[j]:null;
+    if(!val&&val!==0){cell.style.background='var(--color-background-secondary)';cell.style.color='var(--color-text-tertiary)';}
+    else if(statuses&&statuses[j]==='hit'){cell.style.background='#E1F5EE';cell.style.borderColor='#5DCAA5';cell.style.color='#085041';}
+    else if(statuses&&statuses[j]==='fault'){cell.style.background='#FAECE7';cell.style.borderColor='#F0997B';cell.style.color='#712B13';}
+    else{cell.style.background='var(--color-background-primary)';}
+    cell.textContent=(val!==null&&val!==undefined)?val:'—';
+    col.appendChild(cell); el.appendChild(col);
+  }
+}
+
+function buildPHistHead(){
+  document.getElementById('p-hist-head').innerHTML=
+    `<th style="padding:5px 8px;font-weight:500;color:var(--color-text-tertiary);text-align:center">Step</th><th style="padding:5px 8px;font-weight:500;color:var(--color-text-tertiary);text-align:center">Page</th>`+
+    Array.from({length:pNF},(_,i)=>`<th style="padding:5px 8px;font-weight:500;color:var(--color-text-tertiary);text-align:center">F${i}</th>`).join('')+
+    `<th style="padding:5px 8px;font-weight:500;color:var(--color-text-tertiary);text-align:center">Result</th>`;
+}
+
+function pStep(){
+  if(pIdx>=pRefs.length) return;
+  const p=pRefs[pIdx], inF=pFrames.indexOf(p)!==-1;
+  let statuses=Array(pNF).fill(null), evicted=null;
+  if(inF){statuses[pFrames.indexOf(p)]='hit';}
+  else{
+    if(pFrames.length<pNF){pFrames.push(p);statuses[pFrames.indexOf(p)]='fault';}
+    else{
+      if(memAlgo==='FIFO'){pFrames.shift();pFrames.push(p);statuses[pFrames.indexOf(p)]='fault';}
+      else if(memAlgo==='LRU'){
+        let lt=Infinity,li=0;
+        for(let j=0;j<pFrames.length;j++){let l=-1;for(let k=pIdx-1;k>=0;k--){if(pRefs[k]===pFrames[j]){l=k;break;}}if(l<lt){lt=l;li=j;}}
+        evicted=pFrames[li];pFrames[li]=p;statuses[li]='fault';
+      } else {
+        let ff=-1,fi=0;
+        for(let j=0;j<pFrames.length;j++){let n=Infinity;for(let k=pIdx+1;k<pRefs.length;k++){if(pRefs[k]===pFrames[j]){n=k;break;}}if(n>ff){ff=n;fi=j;}}
+        evicted=pFrames[fi];pFrames[fi]=p;statuses[fi]='fault';
+      }
+    }
+  }
+  pHistory.push({step:pIdx+1,page:p,frames:[...pFrames],result:inF?'hit':'fault'});
+  document.querySelectorAll('[id^="pchip-"]').forEach((c,i)=>{
+    c.style.background=i===pIdx?'#EEEDFE':i<pIdx?'var(--color-background-secondary)':'var(--color-background-primary)';
+    c.style.color=i===pIdx?'#3C3489':i<pIdx?'var(--color-text-tertiary)':'var(--color-text-secondary)';
+    c.style.borderColor=i===pIdx?'#AFA9EC':'var(--color-border-tertiary)';
+  });
+  renderPFrames(pFrames,statuses);
+  const faults=pHistory.filter(h=>h.result==='fault').length;
+  const hits=pHistory.filter(h=>h.result==='hit').length;
+  document.getElementById('p-m-faults').textContent=faults;
+  document.getElementById('p-m-hits').textContent=hits;
+  document.getElementById('p-m-rate').textContent=Math.round(hits/(pIdx+1)*100)+'%';
+  document.getElementById('p-step-lbl').textContent=`step ${pIdx+1}/${pRefs.length}`;
+  const res=inF?'<span style="color:#1D9E75">HIT</span>':'<span style="color:#D85A30">FAULT</span>';
+  document.getElementById('p-log').innerHTML=`Step ${pIdx+1}: Page <strong>${p}</strong> — ${res}${evicted!==null?` &nbsp;evicted: <strong>${evicted}</strong>`:''}`;
+  const tb=document.getElementById('p-hist-body');
+  const tr=document.createElement('tr');
+  tr.style.borderBottom='0.5px solid var(--color-border-tertiary)';
+  const h=pHistory[pHistory.length-1];
+  tr.innerHTML=`<td style="padding:4px 8px;text-align:center;font-family:var(--font-mono)">${h.step}</td><td style="padding:4px 8px;text-align:center;font-family:var(--font-mono);font-weight:500">${h.page}</td>`+
+    Array.from({length:pNF},(_,i)=>`<td style="padding:4px 8px;text-align:center;font-family:var(--font-mono)">${h.frames[i]!==undefined?h.frames[i]:'—'}</td>`).join('')+
+    `<td style="padding:4px 8px;text-align:center;font-weight:500;color:${inF?'#1D9E75':'#D85A30'}">${inF?'HIT':'FAULT'}</td>`;
+  tb.appendChild(tr);
+  pIdx++;
+}
+
+async function pRun(){
+  while(pIdx<pRefs.length){pStep();await new Promise(r=>setTimeout(r,300));}
+}
+
+dInit();
+buildCompare();
+</script>

@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OS Interactive Visualizer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --bg-color: #F9FAFB;
+        --panel-bg: #FFFFFF;
+        --text-main: #111827;
+        --text-muted: #6B7280;
+        --accent: #000000;
+        --accent-hover: #374151;
+        --border: #E5E7EB;
+        
+        --color-hit: #10B981;
+        --color-fault: #EF4444;
+        --color-evict: #F59E0B;
+        --color-info: #3B82F6;
+
+        --shadow: 0 4px 6px rgba(0,0,0,0.05), 0 10px 15px -3px rgba(0,0,0,0.05);
+        --radius: 12px;
+        --transition: all 0.3s ease;
+        --font: 'Inter', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        font-family: var(--font);
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        line-height: 1.5;
+        overflow-x: hidden;
+    }
+
+    /* Top Navigation */
+    nav {
+        background: var(--panel-bg);
+        border-bottom: 1px solid var(--border);
+        padding: 0 2rem;
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+    .nav-btn {
+        background: none;
+        border: none;
+        padding: 1.25rem 0.5rem;
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        cursor: pointer;
+        position: relative;
+        transition: var(--transition);
+    }
+
+    .nav-btn:hover { color: var(--text-main); }
+    .nav-btn.active { color: var(--accent); }
+    .nav-btn.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        height: 2px;
+        background: var(--accent);
+        border-top-left-radius: 2px;
+        border-top-right-radius: 2px;
+    }
+
+    /* Layout */
+    main {
+        max-width: 1200px;
+        margin: 3rem auto;
+        padding: 0 2rem;
+    }
+
+    .module {
+        display: none;
+        animation: fadeIn 0.4s ease forwards;
+    }
+
+    .module.active { display: block; }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+        background: var(--panel-bg);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Form Controls */
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+        align-items: flex-end;
+    }
+
+    .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        flex: 1;
+        min-width: 200px;
+    }
+
+    label { font-size: 0.85rem; font-weight: 500; color: var(--text-muted); }
+
+    input, select {
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg-color);
+        font-family: var(--font);
+        font-size: 0.95rem;
+        transition: var(--transition);
+        outline: none;
+    }
+
+    input:focus, select:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+    }
+
+    button.btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-family: var(--font);
+        font-weight: 500;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: var(--transition);
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: var(--accent);
+        color: white;
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    .btn-secondary {
+        background: var(--bg-color);
+        color: var(--text-main);
+        border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: #F3F4F6; }
+
+    /* Tags/Pills */
+    .pill-group {
+        display: inline-flex;
+        background: var(--bg-color);
+        border-radius: 8px;
+        padding: 4px;
+        border: 1px solid var(--border);
+    }
+
+    .pill {
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        border: none;
+        background: transparent;
+        font-family: var(--font);
+        font-weight: 500;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .pill.active {
+        background: var(--panel-bg);
+        color: var(--accent);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    /* Paging Specific */
+    .paging-container {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 2rem;
+    }
+
+    .explanation-panel {
+        background: #F8FAFC;
+        padding: 1.5rem;
+        border-radius: 8px;
+        border-left: 4px solid var(--color-info);
+        font-size: 0.9rem;
+        color: var(--text-muted);
+    }
+
+    .explanation-panel strong { color: var(--text-main); }
+
+    .diagram-area {
+        position: relative;
+        min-height: 400px;
+        background: #F8FAFC;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 2rem;
+        gap: 1rem;
+    }
+
+    .block {
+        position: relative;
+        background: var(--panel-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        padding: 1rem;
+        text-align: center;
+        transition: var(--transition);
+        z-index: 2;
+        width: 30%;
+        min-width: 150px;
+    }
+
+    .block-title { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem; }
+    .block-val { font-family: monospace; font-size: 1.2rem; font-weight: 600; color: var(--accent); }
+    .block-split { display: flex; gap: 0.5rem; margin-top: 0.5rem; justify-content: center; }
+    .split-item { background: var(--bg-color); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; border: 1px solid var(--border); }
+
+    .pt-table { border-collapse: collapse; width: 100%; margin-top: 0.5rem; font-size: 0.85rem; }
+    .pt-table th, .pt-table td { border: 1px solid var(--border); padding: 0.4rem; text-align: center; }
+    .pt-table tr.highlight { background: rgba(59, 130, 246, 0.1); font-weight: 600; color: var(--color-info); }
+
+    #paging-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+
+    /* Page Replacement Specific */
+    .metrics {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .metric {
+        flex: 1; background: #F8FAFC; padding: 1rem; border-radius: 8px; border: 1px solid var(--border); text-align: center;
+    }
+    .metric-val { font-size: 1.75rem; font-weight: 600; margin-bottom: 0.25rem; }
+    .metric-lbl { font-size: 0.75rem; font-weight: 500; color: var(--text-muted); text-transform: uppercase; }
+    
+    .c-hit { color: var(--color-hit); }
+    .c-fault { color: var(--color-fault); }
+    .c-evict { color: var(--color-evict); }
+
+    .ref-track {
+        display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem; padding: 1rem; background: #F8FAFC; border-radius: 8px; border: 1px solid var(--border);
+    }
+    .ref-chip {
+        width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+        background: var(--panel-bg); border: 1px solid var(--border); border-radius: 6px;
+        font-size: 0.9rem; font-weight: 500; transition: var(--transition);
+    }
+    .ref-chip.active { background: var(--accent); color: white; transform: scale(1.1); border-color: var(--accent); }
+    .ref-chip.past { opacity: 0.5; }
+
+    .frames-area {
+        display: flex; gap: 1rem; justify-content: center; min-height: 120px;
+    }
+    .frame-col {
+        display: flex; flex-direction: column; gap: 0.5rem; align-items: center; width: 80px;
+    }
+    .frame-lbl { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
+    .frame-box {
+        width: 100%; height: 80px; background: var(--bg-color); border: 2px dashed var(--border);
+        border-radius: 8px; display: flex; align-items: center; justify-content: center;
+        font-size: 1.5rem; font-weight: 600; transition: var(--transition); position: relative;
+    }
+    .frame-box.filled { background: var(--panel-bg); border-style: solid; border-color: var(--border); }
+    .frame-box.hit { border-color: var(--color-hit); background: rgba(16, 185, 129, 0.05); color: var(--color-hit); }
+    .frame-box.fault { border-color: var(--color-fault); background: rgba(239, 68, 68, 0.05); color: var(--color-fault); }
+    .frame-box.evict { border-color: var(--color-evict); background: rgba(245, 158, 11, 0.05); color: var(--color-evict); }
+
+    .slide-in { animation: slideIn 0.3s ease forwards; }
+    .pop-in { animation: popIn 0.3s ease forwards; }
+    
+    @keyframes slideIn { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes popIn { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+    /* Disk Scheduling Specific */
+    .disk-canvas-wrap {
+        width: 100%;
+        height: 400px;
+        background: #F8FAFC;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        position: relative;
+        overflow: hidden;
+    }
+    canvas { width: 100%; height: 100%; display: block; }
+    /* Charts */
+    .chart-container {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-around;
+        height: 180px;
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-bottom: 2px solid var(--border);
+        gap: 10px;
+    }
+    .bar-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        height: 100%;
+        flex: 1;
+        max-width: 60px;
+    }
+    .bar-fill {
+        width: 100%;
+        background: var(--accent);
+        border-radius: 4px 4px 0 0;
+        transition: height 0.5s ease;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        color: white;
+        font-size: 0.75rem;
+        padding-top: 5px;
+        font-weight: bold;
+    }
+    .bar-fill.best { background: var(--color-hit); }
+    .bar-fill.worst { background: var(--color-fault); }
+    .bar-label {
+        margin-top: 10px;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        font-weight: 600;
+        text-align: center;
+    }
+</style>
+</head>
+<body>
+
+<nav>
+    <button class="nav-btn active" onclick="switchTab('paging', this)">Virtual Memory</button>
+    <button class="nav-btn" onclick="switchTab('replacement', this)">Page Replacement</button>
+    <button class="nav-btn" onclick="switchTab('disk', this)">Disk Scheduling</button>
+</nav>
+
+<main>
+    <!-- MODULE: VIRTUAL MEMORY (PAGING) -->
+    <section id="module-paging" class="module active">
+        <div class="card">
+            <h2 class="card-title">Virtual Memory Implementation (Paging Mapping)</h2>
+            <div class="paging-container">
+                <div>
+                    <div class="controls" style="flex-direction: column; align-items: stretch; margin-bottom: 1rem;">
+                        <div class="input-group">
+                            <label>Logical Address (Decimal)</label>
+                            <input type="number" id="pg-addr" value="8500" min="0">
+                        </div>
+                        <div class="input-group">
+                            <label>Page Size</label>
+                            <select id="pg-size">
+                                <option value="1024">1 KB</option>
+                                <option value="4096" selected>4 KB</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="animatePaging()" style="justify-content:center;">Translate Address</button>
+                    </div>
+                    
+                    <div class="explanation-panel" id="pg-expl">
+                        Enter an address to see the translation process.
+                    </div>
+                </div>
+
+                <div class="diagram-area" id="diagram-area">
+                    <svg id="paging-svg"></svg>
+                    
+                    <div class="block" id="blk-logical">
+                        <div class="block-title">Logical Address</div>
+                        <div class="block-val" id="val-logical">8500</div>
+                        <div class="block-split">
+                            <div class="split-item" id="val-p">Page: -</div>
+                            <div class="split-item" id="val-d1">Offset: -</div>
+                        </div>
+                    </div>
+
+                    <div class="block" id="blk-tlb" style="min-width: 120px;">
+                        <div class="block-title" title="Translation Lookaside Buffer">TLB Cache</div>
+                        <table class="pt-table" id="tlb-table">
+                            <tr><th>Page</th><th>Frame</th></tr>
+                            <!-- populated by JS -->
+                        </table>
+                    </div>
+
+                    <div class="block" id="blk-pt">
+                        <div class="block-title">Page Table</div>
+                        <table class="pt-table" id="pt-table">
+                            <tr><th>Page</th><th>Frame</th></tr>
+                            <!-- populated by JS -->
+                        </table>
+                    </div>
+
+                    <div class="block" id="blk-physical">
+                        <div class="block-title">Physical Memory Address</div>
+                        <div class="block-val" id="val-physical">----</div>
+                        <div class="block-split">
+                            <div class="split-item" id="val-f">Frame: -</div>
+                            <div class="split-item" id="val-d2">Offset: -</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MODULE: PAGE REPLACEMENT -->
+    <section id="module-replacement" class="module">
+        <div class="card">
+            <h2 class="card-title">Page Replacement Simulator</h2>
+            
+            <div class="controls">
+                <div class="input-group" style="flex:2">
+                    <label>Reference String</label>
+                    <input type="text" id="pr-ref" value="7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2, 1, 2, 0, 1, 7, 0, 1">
+                </div>
+                <div class="input-group" style="flex:0.5; min-width: 100px;">
+                    <label>Frames</label>
+                    <input type="number" id="pr-frames" value="3" min="1" max="7">
+                </div>
+                <div class="pill-group" id="pr-algo-group">
+                    <button class="pill active" onclick="setPrAlgo('FIFO', this)">FIFO</button>
+                    <button class="pill" onclick="setPrAlgo('LRU', this)">LRU</button>
+                    <button class="pill" onclick="setPrAlgo('Optimal', this)">Optimal</button>
+                </div>
+                <button class="btn btn-secondary" onclick="prStep()">Step</button>
+                <button class="btn btn-primary" onclick="prRunAll()" id="pr-run-btn">Run All</button>
+                <button class="btn btn-secondary" onclick="prCompareAll()">Compare</button>
+                <button class="btn btn-secondary" onclick="prReset()">Reset</button>
+            </div>
+
+            <div class="metrics">
+                <div class="metric"><div class="metric-val c-hit" id="m-hit">0</div><div class="metric-lbl">Page Hits</div></div>
+                <div class="metric"><div class="metric-val c-fault" id="m-fault">0</div><div class="metric-lbl">Page Faults</div></div>
+                <div class="metric"><div class="metric-val" id="m-ratio">0%</div><div class="metric-lbl">Hit Ratio</div></div>
+            </div>
+
+            <div class="ref-track" id="pr-track"></div>
+            
+            <div class="frames-area" id="pr-frames-area"></div>
+
+            <div id="pr-compare-area" style="margin-top: 2rem; display: none; animation: fadeIn 0.4s ease;">
+                <h3 style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Algorithm Comparison (Hit Ratio)</h3>
+                <div class="chart-container" id="pr-chart"></div>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <h3 style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Execution Logs</h3>
+                <div id="pr-logs" style="font-family: monospace; font-size: 0.85rem; color: var(--text-muted); height: 160px; overflow-y: auto; background: #F8FAFC; padding: 1rem; border-radius: 8px; border: 1px solid var(--border); line-height: 1.8;">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MODULE: DISK SCHEDULING -->
+    <section id="module-disk" class="module">
+        <div class="card">
+            <h2 class="card-title">Disk Scheduling Algorithms</h2>
+            
+            <div class="controls">
+                <div class="input-group" style="flex:2">
+                    <label>Request Queue</label>
+                    <input type="text" id="ds-queue" value="98, 183, 37, 122, 14, 124, 65, 67">
+                </div>
+                <div class="input-group" style="flex:0.5; min-width: 100px;">
+                    <label>Initial Head</label>
+                    <input type="number" id="ds-head" value="53" min="0">
+                </div>
+                <div class="input-group" style="flex:0.5; min-width: 100px;">
+                    <label>Total Cylinders</label>
+                    <input type="number" id="ds-cyl" value="200" min="50" readonly title="0 to 199">
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="pill-group" id="ds-algo-group">
+                    <button class="pill active" onclick="setDsAlgo('FCFS', this)">FCFS</button>
+                    <button class="pill" onclick="setDsAlgo('SSTF', this)">SSTF</button>
+                    <button class="pill" onclick="setDsAlgo('SCAN', this)">SCAN</button>
+                    <button class="pill" onclick="setDsAlgo('C-SCAN', this)">C-SCAN</button>
+                    <button class="pill" onclick="setDsAlgo('LOOK', this)">LOOK</button>
+                    <button class="pill" onclick="setDsAlgo('C-LOOK', this)">C-LOOK</button>
+                </div>
+                <button class="btn btn-secondary" onclick="dsCompareAll()">Compare All</button>
+                <button class="btn btn-primary" onclick="dsRun()" style="margin-left: auto;">Run Animation</button>
+            </div>
+
+            <div class="metrics" style="margin-bottom: 1rem;">
+                <div class="metric"><div class="metric-val" id="ds-movement">0</div><div class="metric-lbl">Total Head Movement</div></div>
+            </div>
+
+            <div class="disk-canvas-wrap">
+                <canvas id="ds-canvas"></canvas>
+            </div>
+
+            <div id="ds-compare-area" style="margin-top: 2rem; display: none; animation: fadeIn 0.4s ease;">
+                <h3 style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Algorithm Comparison (Current Queue)</h3>
+                <div class="chart-container" id="ds-chart" style="margin-bottom: 1.5rem;"></div>
+                <table class="pt-table" id="ds-compare-table" style="width: 100%; margin: 0; text-align: left;">
+                    <tr><th>Algorithm</th><th>Total Head Movement</th></tr>
+                </table>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+// --- GLOBAL ---
+function switchTab(tabId, btn) {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+    
+    if (btn) btn.classList.add('active');
+    document.getElementById('module-' + tabId).classList.add('active');
+}
+
+// --- MODULE 1: PAGING ---
+const ptDummy = {0: 5, 1: 2, 2: 8, 3: 1, 4: 9, 5: 3, 6: 7, 7: 4, 8: 0, 9: 6};
+let tlb = [];
+const TLB_SIZE = 3;
+
+function initPtTable() {
+    let html = '<tr><th>Page</th><th>Frame</th></tr>';
+    for(let i=0; i<=9; i++) {
+        html += `<tr id="ptr-${i}"><td>${i}</td><td>${ptDummy[i]||'-'}</td></tr>`;
+    }
+    document.getElementById('pt-table').innerHTML = html;
+}
+
+function renderTlb() {
+    let html = '<tr><th>Page</th><th>Frame</th></tr>';
+    for(let i=0; i<TLB_SIZE; i++) {
+        if (i < tlb.length) {
+            html += `<tr id="tlb-${tlb[i].p}"><td>${tlb[i].p}</td><td style="color:var(--color-hit); font-weight:bold;">${tlb[i].f}</td></tr>`;
+        } else {
+            html += `<tr><td>-</td><td>-</td></tr>`;
+        }
+    }
+    document.getElementById('tlb-table').innerHTML = html;
+}
+
+initPtTable();
+renderTlb();
+
+function createSvgPath(svg, el1, el2, color, isDashed = false) {
+    const r1 = el1.getBoundingClientRect();
+    const r2 = el2.getBoundingClientRect();
+    const sr = svg.getBoundingClientRect();
+    
+    let x1 = r1.right - sr.left;
+    let y1 = r1.top + r1.height/2 - sr.top;
+    let x2 = r2.left - sr.left;
+    let y2 = r2.top + r2.height/2 - sr.top;
+    
+    let d = `M ${x1} ${y1} C ${x1+40} ${y1}, ${x2-40} ${y2}, ${x2} ${y2}`;
+
+    // adjust if el2 is far below or drawing offset line under boxes
+    if (isDashed) {
+        x1 = r1.left + r1.width/2 - sr.left;
+        y1 = r1.bottom - sr.top;
+        x2 = r2.left + r2.width/2 - sr.left;
+        y2 = r2.bottom - sr.top;
+        d = `M ${x1} ${y1} C ${x1} ${y1+80}, ${x2} ${y2+80}, ${x2} ${y2}`;
+    } else if (r2.top > r1.bottom) {
+        x1 = r1.left + r1.width/2 - sr.left;
+        y1 = r1.bottom - sr.top;
+        x2 = r2.left + r2.width/2 - sr.left;
+        y2 = r2.top - sr.top;
+        d = `M ${x1} ${y1} C ${x1} ${y1+40}, ${x2} ${y2-40}, ${x2} ${y2}`;
+    }
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '2');
+    path.setAttribute('fill', 'none');
+    if (isDashed) path.setAttribute('stroke-dasharray', '5,5');
+    
+    // Marker definition if missing
+    if (!document.getElementById('arrowhead')) {
+        svg.innerHTML += `
+            <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#6B7280" />
+                </marker>
+            </defs>`;
+    }
+    path.setAttribute('marker-end', 'url(#arrowhead)');
+    
+    // Animate line drawing
+    const len = path.getTotalLength() || 500;
+    path.style.strokeDasharray = len + ' ' + len;
+    path.style.strokeDashoffset = len;
+    path.style.transition = 'stroke-dashoffset 0.6s ease-in-out';
+    svg.appendChild(path);
+    
+    // Trigger layout to apply transition
+    path.getBoundingClientRect();
+    path.style.strokeDashoffset = '0';
+}
+
+function animatePaging() {
+    const svg = document.getElementById('paging-svg');
+    svg.innerHTML = '';
+    document.querySelectorAll('#pt-table tr').forEach(tr => tr.classList.remove('highlight'));
+    
+    const la = parseInt(document.getElementById('pg-addr').value);
+    const size = parseInt(document.getElementById('pg-size').value);
+    if(isNaN(la)) return;
+
+    const p = Math.floor(la / size);
+    const d = la % size;
+    const offsetBits = Math.log2(size);
+    
+    document.getElementById('val-logical').innerHTML = `${la}<br><span style="font-size:0.8rem;color:#6B7280;font-weight:400">BIN: ${la.toString(2)}</span>`;
+    document.getElementById('val-p').innerHTML = `Page: ${p}<br><span style="font-size:0.75rem;color:#6B7280;font-weight:400">${p.toString(2)}</span>`;
+    document.getElementById('val-d1').innerHTML = `Offset: ${d}<br><span style="font-size:0.75rem;color:#6B7280;font-weight:400">${d.toString(2).padStart(offsetBits, '0')}</span>`;
+    
+    document.getElementById('pg-expl').innerHTML = `<strong>Step 1:</strong> Logical Address (${la}) is logically split into Page Number (<strong>${p}</strong>) and Offset (<strong>${d}</strong>) using Page Size (${size} bytes = 2^${offsetBits}).`;
+    
+    setTimeout(() => {
+        let tlbEntry = tlb.find(e => e.p === p);
+        if (tlbEntry) {
+            // TLB HIT
+            document.getElementById('pg-expl').innerHTML += `<br><br><strong>Step 2 (<span class="c-hit">TLB HIT</span>):</strong> Page <strong>${p}</strong> found in TLB Cache! Extremely fast translation.`;
+            const tRow = document.getElementById(`tlb-${p}`);
+            if(tRow) {
+                tRow.classList.add('highlight');
+                createSvgPath(svg, document.getElementById('blk-logical'), tRow, '#10B981');
+                setTimeout(() => {
+                    finishPagingAnim(p, tlbEntry.f, d, size, offsetBits, svg, tRow);
+                }, 800);
+            }
+        } else {
+            // TLB MISS
+            document.getElementById('pg-expl').innerHTML += `<br><br><strong>Step 2 (<span class="c-fault">TLB MISS</span>):</strong> Page <strong>${p}</strong> not in TLB. Accessing Main Page Table.`;
+            const pRow = document.getElementById(`ptr-${p}`);
+            if(pRow) {
+                createSvgPath(svg, document.getElementById('blk-logical'), pRow, '#3B82F6');
+                pRow.classList.add('highlight');
+                document.getElementById('pg-expl').innerHTML += `<br><br><strong>Step 3:</strong> Look up Page <strong>${p}</strong> in Page Table. Frame Number is <strong>${ptDummy[p]}</strong>.`;
+                
+                // Update TLB
+                if(tlb.length >= TLB_SIZE) tlb.shift();
+                tlb.push({p: p, f: ptDummy[p]});
+                renderTlb();
+                
+                setTimeout(() => {
+                    finishPagingAnim(p, ptDummy[p], d, size, offsetBits, svg, pRow);
+                }, 800);
+            } else {
+                document.getElementById('pg-expl').innerHTML += `<br><br><strong>Error:</strong> Page ${p} not found in Page Table (Page Fault).`;
+            }
+        }
+    }, 800);
+}
+
+function finishPagingAnim(p, f, d, size, offsetBits, svg, sourceEl) {
+    const pa = (f * size) + d;
+    
+    document.getElementById('val-f').innerHTML = `Frame: ${f}<br><span style="font-size:0.75rem;color:#6B7280;font-weight:400">${f.toString(2)}</span>`;
+    document.getElementById('val-d2').innerHTML = `Offset: ${d}<br><span style="font-size:0.75rem;color:#6B7280;font-weight:400">${d.toString(2).padStart(offsetBits, '0')}</span>`;
+    document.getElementById('val-physical').innerHTML = `${pa}<br><span style="font-size:0.8rem;color:#6B7280;font-weight:400">BIN: ${pa.toString(2)}</span>`;
+    
+    createSvgPath(svg, sourceEl, document.getElementById('blk-physical'), '#10B981');
+    createSvgPath(svg, document.getElementById('val-d1'), document.getElementById('val-d2'), '#9CA3AF', true);
+    
+    document.getElementById('pg-expl').innerHTML += `<br><br><strong>Final Step:</strong> Physical Address = (Frame <strong>${f}</strong> &times; ${size}) + Offset <strong>${d}</strong> = <strong>${pa}</strong>.`;
+}
+
+
+// --- MODULE 2: PAGE REPLACEMENT ---
+let prAlgo = 'FIFO';
+let prQueue = []; // For FIFO
+let prLastUsed = {}; // For LRU
+let prFrames = [];
+let prRefArr = [];
+let prCurrIdx = 0;
+let prHits = 0, prFaults = 0;
+let prIsRunning = false;
+
+function setPrAlgo(algo, btn) {
+    document.querySelectorAll('#pr-algo-group .pill').forEach(p => p.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    prAlgo = algo;
+    prReset();
+}
+
+function prReset() {
+    prIsRunning = false;
+    document.getElementById('pr-run-btn').textContent = 'Run All';
+    prCurrIdx = 0;
+    prHits = 0; prFaults = 0;
+    prFrames = []; prQueue = []; prLastUsed = {};
+    
+    const raw = document.getElementById('pr-ref').value;
+    prRefArr = raw.split(/[\s,]+/).filter(x => x.trim() !== '').map(Number);
+    
+    document.getElementById('pr-logs').innerHTML = '';
+    renderPrTrack();
+    renderPrFrames();
+    updatePrMetrics();
+}
+
+function renderPrTrack() {
+    const track = document.getElementById('pr-track');
+    track.innerHTML = prRefArr.map((n, i) => `<div class="ref-chip" id="chip-${i}">${n}</div>`).join('');
+}
+
+function renderPrFrames(statusObj = {}) {
+    const n = parseInt(document.getElementById('pr-frames').value);
+    const area = document.getElementById('pr-frames-area');
+    
+    if (area.children.length !== n) {
+        area.innerHTML = '';
+        for(let i=0; i<n; i++) {
+            area.innerHTML += `
+                <div class="frame-col">
+                    <div class="frame-lbl">Frame ${i}</div>
+                    <div class="frame-box" id="frame-box-${i}"></div>
+                </div>`;
+        }
+    }
+    
+    for(let i=0; i<n; i++) {
+        let val = prFrames[i] !== undefined ? prFrames[i] : '';
+        let box = document.getElementById(`frame-box-${i}`);
+        
+        // Reset classes and trigger reflow for animation restart
+        box.className = 'frame-box';
+        void box.offsetWidth; 
+        
+        if (val !== '') box.classList.add('filled');
+        box.textContent = val;
+        
+        if (statusObj.idx === i) {
+            if (statusObj.type === 'hit') box.classList.add('hit', 'pop-in');
+            else if (statusObj.type === 'fault') box.classList.add('fault', 'slide-in');
+            else if (statusObj.type === 'evict') box.classList.add('evict', 'slide-in');
+        }
+    }
+}
+
+function updatePrMetrics() {
+    document.getElementById('m-hit').textContent = prHits;
+    document.getElementById('m-fault').textContent = prFaults;
+    const total = prHits + prFaults;
+    document.getElementById('m-ratio').textContent = total > 0 ? Math.round((prHits/total)*100) + '%' : '0%';
+}
+
+function prStep() {
+    if (prCurrIdx >= prRefArr.length) return false;
+    
+    // Update Track UI
+    document.querySelectorAll('.ref-chip').forEach(c => c.classList.remove('active'));
+    for(let i=0; i<prCurrIdx; i++) document.getElementById(`chip-${i}`).classList.add('past');
+    document.getElementById(`chip-${prCurrIdx}`).classList.add('active');
+
+    const page = prRefArr[prCurrIdx];
+    const n = parseInt(document.getElementById('pr-frames').value);
+    let statusObj = { idx: -1, type: '' };
+    let evictPage = -1;
+
+    let inMemoryIdx = prFrames.indexOf(page);
+    let logMsg = `[Step ${prCurrIdx + 1}] Request Page <strong>${page}</strong> &rarr; `;
+    
+    if (inMemoryIdx !== -1) {
+        // HIT
+        prHits++;
+        statusObj = { idx: inMemoryIdx, type: 'hit' };
+        prLastUsed[page] = prCurrIdx;
+        logMsg += `<span class="c-hit">HIT</span>. Frame ${inMemoryIdx} contains Page ${page}.`;
+    } else {
+        // FAULT
+        prFaults++;
+        if (prFrames.length < n) {
+            // Empty space available
+            prFrames.push(page);
+            prQueue.push(page);
+            prLastUsed[page] = prCurrIdx;
+            statusObj = { idx: prFrames.length - 1, type: 'fault' };
+            logMsg += `<span class="c-fault">FAULT</span>. Loaded into empty Frame ${statusObj.idx}.`;
+        } else {
+            // Eviction needed
+            let evictIdx = -1;
+            
+            if (prAlgo === 'FIFO') {
+                evictPage = prQueue.shift();
+                evictIdx = prFrames.indexOf(evictPage);
+            } 
+            else if (prAlgo === 'LRU') {
+                let oldestTime = Infinity;
+                for(let i=0; i<prFrames.length; i++) {
+                    let p = prFrames[i];
+                    if(prLastUsed[p] < oldestTime) {
+                        oldestTime = prLastUsed[p];
+                        evictIdx = i;
+                        evictPage = p;
+                    }
+                }
+            } 
+            else if (prAlgo === 'Optimal') {
+                let candidates = [];
+                let maxFutureUse = -1;
+                
+                for(let i=0; i<prFrames.length; i++) {
+                    let p = prFrames[i];
+                    let nextUse = prRefArr.indexOf(p, prCurrIdx + 1);
+                    if (nextUse === -1) {
+                        candidates.push(i);
+                    } else if (candidates.length === 0 && nextUse > maxFutureUse) {
+                        maxFutureUse = nextUse;
+                        evictIdx = i;
+                        evictPage = p;
+                    }
+                }
+                
+                if (candidates.length > 0) {
+                    evictIdx = candidates[0];
+                    evictPage = prFrames[evictIdx];
+                }
+            }
+            
+            prFrames[evictIdx] = page;
+            if(prAlgo === 'FIFO') prQueue.push(page);
+            prLastUsed[page] = prCurrIdx;
+            statusObj = { idx: evictIdx, type: 'evict' };
+            logMsg += `<span class="c-fault">FAULT</span> &amp; <span class="c-evict">EVICT</span>. Replaced Page ${evictPage} in Frame ${evictIdx} with Page ${page}.`;
+        }
+    }
+    
+    let frameStateStr = '[' + Array.from({length: n}, (_, i) => prFrames[i] !== undefined ? prFrames[i] : '-').join(', ') + ']';
+    logMsg += ` <span style="margin-left: 10px; color:var(--accent); font-weight:600;">Frames: ${frameStateStr}</span>`;
+
+    let logs = document.getElementById('pr-logs');
+    logs.innerHTML += `<div>${logMsg}</div>`;
+    logs.scrollTop = logs.scrollHeight;
+
+    renderPrFrames(statusObj);
+    updatePrMetrics();
+    prCurrIdx++;
+    return true;
+}
+
+async function prRunAll() {
+    if (prIsRunning) return;
+    prIsRunning = true;
+    document.getElementById('pr-run-btn').textContent = 'Running...';
+    
+    while (prStep() && prIsRunning) {
+        await new Promise(r => setTimeout(r, 320));
+    }
+    
+    prIsRunning = false;
+    document.getElementById('pr-run-btn').textContent = 'Run All';
+}
+
+function runPrHeadless(algo) {
+    const raw = document.getElementById('pr-ref').value;
+    let refArr = raw.split(/[\s,]+/).filter(x => x.trim() !== '').map(Number);
+    const n = parseInt(document.getElementById('pr-frames').value);
+    
+    let frames = [];
+    let queue = [];
+    let lastUsed = {};
+    let hits = 0;
+    
+    for(let currIdx = 0; currIdx < refArr.length; currIdx++) {
+        let page = refArr[currIdx];
+        let inMemoryIdx = frames.indexOf(page);
+        
+        if (inMemoryIdx !== -1) {
+            hits++;
+            lastUsed[page] = currIdx;
+        } else {
+            if (frames.length < n) {
+                frames.push(page);
+                queue.push(page);
+                lastUsed[page] = currIdx;
+            } else {
+                let evictIdx = -1;
+                if (algo === 'FIFO') {
+                    let evictPage = queue.shift();
+                    evictIdx = frames.indexOf(evictPage);
+                } else if (algo === 'LRU') {
+                    let oldestTime = Infinity;
+                    for(let i=0; i<frames.length; i++) {
+                        let p = frames[i];
+                        if(lastUsed[p] < oldestTime) { oldestTime = lastUsed[p]; evictIdx = i; }
+                    }
+                } else if (algo === 'Optimal') {
+                    let candidates = [];
+                    let maxFutureUse = -1;
+                    for(let i=0; i<frames.length; i++) {
+                        let p = frames[i];
+                        let nextUse = refArr.indexOf(p, currIdx + 1);
+                        if (nextUse === -1) { candidates.push(i); } 
+                        else if (candidates.length === 0 && nextUse > maxFutureUse) {
+                            maxFutureUse = nextUse; evictIdx = i;
+                        }
+                    }
+                    if (candidates.length > 0) evictIdx = candidates[0];
+                }
+                frames[evictIdx] = page;
+                if(algo === 'FIFO') queue.push(page);
+                lastUsed[page] = currIdx;
+            }
+        }
+    }
+    return Math.round((hits / refArr.length) * 100);
+}
+
+function prCompareAll() {
+    const algos = ['FIFO', 'LRU', 'Optimal'];
+    let results = [];
+    algos.forEach(a => {
+        results.push({ name: a, ratio: runPrHeadless(a) });
+    });
+    
+    let maxRatio = Math.max(...results.map(r => r.ratio));
+    
+    let chartHtml = '';
+    results.forEach(r => {
+        let h = Math.max(r.ratio, 5); // min 5% height
+        let cls = r.ratio === maxRatio ? 'bar-fill best' : 'bar-fill';
+        chartHtml += `
+            <div class="bar-col">
+                <div class="${cls}" style="height: ${h}%">${r.ratio}%</div>
+                <div class="bar-label">${r.name}</div>
+            </div>
+        `;
+    });
+    
+    document.getElementById('pr-chart').innerHTML = chartHtml;
+    document.getElementById('pr-compare-area').style.display = 'block';
+}
+
+prReset();
+
+
+// --- MODULE 3: DISK SCHEDULING ---
+let dsAlgo = 'FCFS';
+
+function setDsAlgo(algo, btn) {
+    document.querySelectorAll('#ds-algo-group .pill').forEach(p => p.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    dsAlgo = algo;
+    dsDrawPath(false);
+}
+
+function dsGetParams() {
+    const raw = document.getElementById('ds-queue').value;
+    const queue = raw.split(/[\s,]+/).filter(x => x.trim() !== '').map(Number);
+    const head = parseInt(document.getElementById('ds-head').value) || 53;
+    const maxCyl = parseInt(document.getElementById('ds-cyl').value) || 200;
+    return { queue, head, maxCyl: maxCyl - 1 }; // 0 to 199 means max is 199
+}
+
+function computeDsSeq() {
+    const { queue, head, maxCyl } = dsGetParams();
+    let seq = [head];
+    let pos = head;
+    let total = 0;
+    let q = [...queue];
+
+    if (dsAlgo === 'FCFS') {
+        q.forEach(c => { total += Math.abs(c - pos); pos = c; seq.push(c); });
+    } 
+    else if (dsAlgo === 'SSTF') {
+        while (q.length > 0) {
+            let bestIdx = -1;
+            let minDist = Infinity;
+            for(let i=0; i<q.length; i++) {
+                let dist = Math.abs(q[i] - pos);
+                if (dist < minDist) { minDist = dist; bestIdx = i; }
+            }
+            let next = q.splice(bestIdx, 1)[0];
+            total += minDist; pos = next; seq.push(pos);
+        }
+    } 
+    else if (dsAlgo === 'SCAN') {
+        // Assume default direction UP towards maxCyl
+        let up = q.filter(c => c >= pos).sort((a,b)=>a-b);
+        let down = q.filter(c => c < pos).sort((a,b)=>b-a);
+        
+        up.forEach(c => { total += Math.abs(c - pos); pos = c; seq.push(c); });
+        // MUST travel to absolute end
+        if (up.length > 0 || down.length > 0) {
+            if (pos !== maxCyl) { total += Math.abs(maxCyl - pos); pos = maxCyl; seq.push(pos); }
+        }
+        down.forEach(c => { total += Math.abs(c - pos); pos = c; seq.push(c); });
+    } 
+    else if (dsAlgo === 'C-SCAN') {
+        let up = q.filter(c => c >= pos).sort((a,b)=>a-b);
+        let down = q.filter(c => c < pos).sort((a,b)=>a-b);
+        
+        up.forEach(c => { total += Math.abs(c - pos); pos = c; seq.push(c); });
+        // Go to end
+        if (pos !== maxCyl) { total += Math.abs(maxCyl - pos); pos = maxCyl; seq.push(pos); }
+        if (down.length > 0) {
+            // Jump to 0. Count jump.
+            total += Math.abs(0 - pos); pos = 0; seq.push(pos);
+            down.forEach(c => { total += Math.abs(c - pos); pos = c; seq.push(c); });
+        }
+    } 
+    else if (dsAlgo === 'LOOK') {
+        let up = q.filter(c => c >= pos).sort((a,b)=>a-b);
+        let down = q.filter(c => c < pos).sort((a,b)=>b-a);
+        up.forEach(c => { total += Math.abs(c - pos); pos = c; seq.push(c); });
+        // Reverses directly, no going to end
+        down.forEach(c => { total += Math.abs(c - pos); pos = c; seq.push(c); });
+    } 
+    else if (dsAlgo === 'C-LOOK') {
+        let up = q.filter(c => c >= pos).sort((a,b)=>a-b);
+        let down = q.filter(c => c < pos).sort((a,b)=>a-b);
+        up.forEach(c => { total += Math.abs(c - pos); pos = c; seq.push(c); });
+        if (down.length > 0) {
+            // Jump directly to lowest request
+            total += Math.abs(down[0] - pos); pos = down[0]; seq.push(pos);
+            for(let i=1; i<down.length; i++) {
+                total += Math.abs(down[i] - pos); pos = down[i]; seq.push(pos);
+            }
+        }
+    }
+
+    return { seq, total };
+}
+
+let dsAnimRaf;
+function dsDrawPath(animate = false) {
+    if (dsAnimRaf) cancelAnimationFrame(dsAnimRaf);
+    
+    const canvas = document.getElementById('ds-canvas');
+    const wrap = canvas.parentElement;
+    canvas.width = wrap.clientWidth;
+    canvas.height = wrap.clientHeight;
+    const ctx = canvas.getContext('2d');
+    
+    const { seq, total } = computeDsSeq();
+    document.getElementById('ds-movement').textContent = total;
+    
+    const { queue, head, maxCyl } = dsGetParams();
+    const padX = 40; const padY = 40;
+    const W = canvas.width - padX*2;
+    const H = canvas.height - padY*2;
+    
+    // Collect all unique cylinders that will be visited
+    let gridLines = [...new Set([...queue, head, 0, maxCyl])].sort((a,b)=>a-b);
+    
+    // Spaces equally separated -> X is mapped to the array index!
+    const getX = c => {
+        let idx = gridLines.indexOf(c);
+        if (idx === -1) return padX; // Fallback
+        return padX + (idx / Math.max(1, gridLines.length - 1)) * W;
+    };
+    
+    const getY = step => padY + (step / Math.max(1, seq.length-1)) * H;
+    
+    // Draw Grid with all lines requested
+    ctx.clearRect(0,0, canvas.width, canvas.height);
+    ctx.strokeStyle = '#E5E7EB';
+    ctx.lineWidth = 1;
+    ctx.fillStyle = '#6B7280';
+    ctx.font = '11px Inter';
+    ctx.textAlign = 'center';
+    
+    gridLines.forEach((v, i) => {
+        let vx = getX(v);
+        ctx.beginPath(); ctx.moveTo(vx, padY); ctx.lineTo(vx, canvas.height - padY); ctx.stroke();
+        let textY = 20 + (i % 2 === 0 ? 0 : 12); // Alternate height to avoid overlap
+        ctx.fillText(Math.round(v), vx, textY);
+    });
+    
+    if (!animate) {
+        // Draw static path
+        ctx.beginPath();
+        ctx.strokeStyle = '#3B82F6';
+        ctx.lineWidth = 2;
+        seq.forEach((c, i) => {
+            if(i===0) ctx.moveTo(getX(c), getY(i));
+            else ctx.lineTo(getX(c), getY(i));
+        });
+        ctx.stroke();
+        
+        // Draw points
+        seq.forEach((c, i) => {
+            ctx.beginPath();
+            ctx.arc(getX(c), getY(i), 5, 0, Math.PI*2);
+            ctx.fillStyle = i===0 ? '#10B981' : '#EF4444';
+            ctx.fill();
+            if (i>0) {
+                ctx.fillStyle = '#374151';
+                ctx.fillText(c, getX(c) + 15, getY(i) + 4);
+            }
+        });
+    } else {
+        // Animate path
+        let startT = null;
+        const duration = seq.length * 300; // 300ms per segment
+        
+        function drawFrame(now) {
+            if(!startT) startT = now;
+            let elapsed = now - startT;
+            let progress = Math.min(elapsed / duration, 1);
+            
+            let currentStep = progress * (seq.length - 1);
+            let idx = Math.floor(currentStep);
+            let frac = currentStep - idx;
+            
+            // clear and redraw grid
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#E5E7EB'; ctx.lineWidth = 1; ctx.fillStyle = '#6B7280';
+            gridLines.forEach((v, i) => {
+                let vx = getX(v);
+                ctx.beginPath(); ctx.moveTo(vx, padY); ctx.lineTo(vx, canvas.height - padY); ctx.stroke();
+                let textY = 20 + (i % 2 === 0 ? 0 : 12);
+                ctx.fillText(Math.round(v), vx, textY);
+            });
+            
+            // draw path up to current progress
+            ctx.beginPath();
+            ctx.strokeStyle = '#3B82F6';
+            ctx.lineWidth = 2;
+            for(let i=0; i<=idx; i++) {
+                if(i===0) ctx.moveTo(getX(seq[i]), getY(i));
+                else ctx.lineTo(getX(seq[i]), getY(i));
+            }
+            if (idx < seq.length - 1) {
+                let x = getX(seq[idx]) + (getX(seq[idx+1]) - getX(seq[idx])) * frac;
+                let y = getY(idx) + (getY(idx+1) - getY(idx)) * frac;
+                ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            
+            // draw points
+            for(let i=0; i<=idx; i++) {
+                ctx.beginPath();
+                ctx.arc(getX(seq[i]), getY(i), 5, 0, Math.PI*2);
+                ctx.fillStyle = i===0 ? '#10B981' : '#EF4444';
+                ctx.fill();
+                if (i>0) {
+                    ctx.fillStyle = '#374151';
+                    ctx.fillText(seq[i], getX(seq[i]) + 15, getY(i) + 4);
+                }
+            }
+            
+            if (progress < 1) {
+                dsAnimRaf = requestAnimationFrame(drawFrame);
+            }
+        }
+        dsAnimRaf = requestAnimationFrame(drawFrame);
+    }
+}
+
+function dsCompareAll() {
+    const algos = ['FCFS', 'SSTF', 'SCAN', 'C-SCAN', 'LOOK', 'C-LOOK'];
+    const currentAlgo = dsAlgo; // Save current state
+    let results = [];
+    
+    algos.forEach(a => {
+        dsAlgo = a;
+        let res = computeDsSeq();
+        results.push({ name: a, total: res.total });
+    });
+    
+    // Restore state
+    dsAlgo = currentAlgo;
+    
+    let minTotal = Math.min(...results.map(r => r.total));
+    let maxTotal = Math.max(...results.map(r => r.total));
+    
+    // Draw Chart
+    let chartHtml = '';
+    results.forEach(r => {
+        // Proportion based on maxTotal
+        let h = (r.total / maxTotal) * 100;
+        let cls = r.total === minTotal ? 'bar-fill best' : (r.total === maxTotal ? 'bar-fill worst' : 'bar-fill');
+        chartHtml += `
+            <div class="bar-col">
+                <div class="${cls}" style="height: ${Math.max(h, 10)}%">${r.total}</div>
+                <div class="bar-label">${r.name}</div>
+            </div>
+        `;
+    });
+    
+    // Sort ascending for table
+    results.sort((a, b) => a.total - b.total);
+    
+    let html = '<tr><th>Rank</th><th>Algorithm</th><th>Total Head Movement</th></tr>';
+    results.forEach((r, i) => {
+        let isBest = i === 0 ? 'style="background: rgba(16, 185, 129, 0.1); font-weight: 600; color: var(--color-hit);"' : '';
+        html += `<tr ${isBest}>
+            <td>#${i + 1}</td>
+            <td>${r.name} ${i === 0 ? '🏆 (Best)' : ''}</td>
+            <td>${r.total}</td>
+        </tr>`;
+    });
+    
+    document.getElementById('ds-chart').innerHTML = chartHtml;
+    document.getElementById('ds-compare-table').innerHTML = html;
+    document.getElementById('ds-compare-area').style.display = 'block';
+}
+
+function dsRun() {
+    document.getElementById('ds-compare-area').style.display = 'none';
+    dsDrawPath(true);
+}
+
+// Initial draw
+dsDrawPath(false);
+
+// Handle window resize for canvas
+window.addEventListener('resize', () => {
+    if(document.getElementById('module-disk').classList.contains('active')) {
+        dsDrawPath(false);
+    }
+});
+
+</script>
+</body>
+</html>
