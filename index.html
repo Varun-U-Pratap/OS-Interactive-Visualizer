@@ -7,22 +7,35 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
     :root {
-        --bg-color: #F0F4F8;
-        --panel-bg: rgba(255, 255, 255, 0.85);
-        --text-main: #0F172A;
-        --text-muted: #64748B;
-        --accent: #3B82F6;
-        --accent-hover: #2563EB;
-        --border: rgba(226, 232, 240, 0.8);
-        
+        --bg-color: #0F0F12;
+        --panel-bg: rgba(30, 30, 35, 0.7);
+        --inset-bg: rgba(20, 20, 25, 0.5);
+        --text-main: #F0F0F5;
+        --text-muted: #94949E;
+        --accent: #8B5CF6; /* Indigo/Violet */
+        --accent-hover: #7C3AED;
+        --accent-glow: rgba(139, 92, 246, 0.3);
+        --accent-text: #FFFFFF;
+        --border: rgba(255, 255, 255, 0.1);
+
         --color-hit: #10B981;
         --color-fault: #EF4444;
         --color-evict: #F59E0B;
-        --color-info: #0EA5E9;
+        --color-info: #3B82F6;
 
-        --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
-        --radius: 16px;
-        --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        /* Canvas / chart colors */
+        --canvas-bg: #141417;
+        --canvas-grid: rgba(255, 255, 255, 0.05);
+        --canvas-text: #94949E;
+        --canvas-path: #8B5CF6;
+        --canvas-dot-start: #10B981;
+        --canvas-dot-stop: #EF4444;
+        --canvas-dot-label: #F0F0F5;
+
+        --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
+        --glass-bg: rgba(255, 255, 255, 0.03);
+        --radius: 12px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         --font: 'Inter', sans-serif;
     }
 
@@ -30,7 +43,7 @@
 
     body {
         font-family: var(--font);
-        background: linear-gradient(135deg, #E0E7FF 0%, #F3F4F6 100%);
+        background: var(--bg-color);
         color: var(--text-main);
         line-height: 1.6;
         min-height: 100vh;
@@ -39,18 +52,17 @@
 
     /* Top Navigation */
     nav {
-        background: rgba(255, 255, 255, 0.7);
+        background: rgba(15, 15, 18, 0.8);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+        border-bottom: 1px solid var(--border);
         padding: 0 2rem;
         display: flex;
         justify-content: center;
-        gap: 2rem;
+        gap: 1.5rem;
         position: sticky;
         top: 0;
         z-index: 100;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
     }
 
     .nav-btn {
@@ -98,19 +110,19 @@
 
     .card {
         background: var(--panel-bg);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
         border-radius: var(--radius);
+        border: 1px solid var(--border);
+        padding: 2rem;
+        margin-bottom: 2.5rem;
         box-shadow: var(--shadow);
-        border: 1px solid rgba(255,255,255,0.6);
-        padding: 2.5rem;
-        margin-bottom: 2rem;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        transition: var(--transition);
     }
     
     .card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 20px 30px -10px rgba(0,0,0,0.08);
+        border-color: rgba(139, 92, 246, 0.3);
+        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.8), 0 0 20px var(--accent-glow);
     }
 
     .card-title {
@@ -145,9 +157,10 @@
 
     input, select {
         padding: 0.75rem 1rem;
-        border-radius: 8px;
+        border-radius: 6px;
         border: 1px solid var(--border);
         background: var(--bg-color);
+        color: var(--text-main);
         font-family: var(--font);
         font-size: 0.95rem;
         transition: var(--transition);
@@ -156,12 +169,12 @@
 
     input:focus, select:focus {
         border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+        box-shadow: 0 0 0 1px var(--accent);
     }
 
     button.btn {
         padding: 0.75rem 1.5rem;
-        border-radius: 8px;
+        border-radius: 6px;
         font-family: var(--font);
         font-weight: 500;
         font-size: 0.95rem;
@@ -174,25 +187,21 @@
     }
 
     .btn-primary {
-        background: linear-gradient(135deg, var(--accent) 0%, #60A5FA 100%);
-        color: white;
-        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+        background: var(--accent);
+        color: var(--accent-text);
+        font-weight: 600;
     }
     .btn-primary:hover { 
-        background: linear-gradient(135deg, var(--accent-hover) 0%, var(--accent) 100%);
-        box-shadow: 0 6px 8px -1px rgba(59, 130, 246, 0.4);
-        transform: translateY(-1px);
+        background: var(--accent-hover);
     }
 
     .btn-secondary {
-        background: rgba(255, 255, 255, 0.8);
+        background: transparent;
         color: var(--text-main);
         border: 1px solid var(--border);
     }
     .btn-secondary:hover { 
-        background: #FFFFFF; 
-        transform: translateY(-1px);
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        background: rgba(255, 255, 255, 0.05); 
     }
 
     /* Tags/Pills */
@@ -231,63 +240,111 @@
     }
 
     .explanation-panel {
-        background: rgba(248, 250, 252, 0.7);
-        backdrop-filter: blur(8px);
+        background: var(--panel-bg);
         padding: 1.5rem;
         border-radius: 12px;
         border-left: 4px solid var(--accent);
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         color: var(--text-main);
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        line-height: 1.8;
     }
+    .explanation-panel strong { color: var(--accent); }
 
-    .explanation-panel strong { color: var(--text-main); }
-
+    /* Vertical flow diagram */
     .diagram-area {
         position: relative;
-        min-height: 400px;
-        background: rgba(248, 250, 252, 0.6);
-        backdrop-filter: blur(4px);
+        background: var(--bg-color);
         border-radius: var(--radius);
         border: 1px solid var(--border);
+        padding: 1.5rem;
         display: flex;
-        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    /* Left side: flow column */
+    .flow-col {
+        display: flex;
+        flex-direction: column;
         align-items: center;
-        padding: 2rem;
-        gap: 1.5rem;
+        flex: 1;
+        gap: 0;
     }
 
     .block {
-        position: relative;
-        background: #FFFFFF;
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-        padding: 1.5rem 1rem;
+        background: var(--panel-bg);
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        padding: 1rem;
         text-align: center;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        width: 100%;
         z-index: 2;
-        flex: 1;
-        min-width: 130px;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .block.active-block {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(217,119,87,0.25);
     }
 
-    .block:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08);
+    .flow-arrow {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2px 0;
+    }
+    .flow-arrow-line {
+        width: 2px;
+        height: 24px;
+        background: var(--border);
+        position: relative;
+    }
+    .flow-arrow-line.active { background: var(--accent); }
+    .flow-arrow-head {
+        width: 0; height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 8px solid var(--border);
+    }
+    .flow-arrow-head.active { border-top-color: var(--accent); }
+    .flow-arrow-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        font-weight: 600;
+        margin-bottom: 2px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .flow-arrow-label.active { color: var(--accent); }
+
+    /* Right side: lookup tables column */
+    .lookup-col {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        width: 200px;
+        flex-shrink: 0;
     }
 
-    .block-title { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 0.05em; }
-    .block-val { font-family: monospace; font-size: 1.4rem; font-weight: 600; color: var(--accent); }
-    .block-split { display: flex; gap: 0.5rem; margin-top: 0.75rem; justify-content: center; }
-    .split-item { background: var(--bg-color); padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.85rem; border: 1px solid var(--border); color: var(--text-main); font-weight: 500;}
+    /* connector line from flow to lookup */
+    .diagram-svg-overlay {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        pointer-events: none;
+        z-index: 3;
+        overflow: visible;
+    }
 
-    .pt-table { border-collapse: separate; border-spacing: 0; width: 100%; margin-top: 0.75rem; font-size: 0.85rem; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
-    .pt-table th { background: rgba(241, 245, 249, 0.8); padding: 0.5rem; text-align: center; border-bottom: 1px solid var(--border); color: var(--text-main); font-weight: 600; }
-    .pt-table td { padding: 0.5rem; text-align: center; border-bottom: 1px solid var(--border); }
+    .block-title { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.05em; }
+    .block-val { font-family: monospace; font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+    .block-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; font-family: monospace; }
+    .block-split { display: flex; gap: 0.4rem; margin-top: 0.6rem; justify-content: center; flex-wrap: wrap; }
+    .split-item { background: var(--bg-color); padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.8rem; border: 1px solid var(--border); color: var(--text-main); font-weight: 500; }
+
+    .pt-table { border-collapse: separate; border-spacing: 0; width: 100%; margin-top: 0.5rem; font-size: 0.8rem; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
+    .pt-table th { background: rgba(255,255,255,0.05); padding: 0.4rem; text-align: center; border-bottom: 1px solid var(--border); color: var(--text-main); font-weight: 600; }
+    .pt-table td { padding: 0.35rem; text-align: center; border-bottom: 1px solid var(--border); color: var(--text-muted); }
     .pt-table tr:last-child td { border-bottom: none; }
-    .pt-table tr.highlight { background: rgba(59, 130, 246, 0.1); font-weight: 600; color: var(--accent); }
-
-    #paging-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+    .pt-table tr.highlight td { background: rgba(217,119,87,0.15); color: var(--accent); font-weight: 700; }
 
     /* Page Replacement Specific */
     .metrics {
@@ -296,17 +353,23 @@
         margin-bottom: 1.5rem;
     }
     .metric {
-        flex: 1; background: #F8FAFC; padding: 1rem; border-radius: 8px; border: 1px solid var(--border); text-align: center;
+        flex: 1;
+        background: var(--inset-bg);
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        text-align: center;
     }
-    .metric-val { font-size: 1.75rem; font-weight: 600; margin-bottom: 0.25rem; }
-    .metric-lbl { font-size: 0.75rem; font-weight: 500; color: var(--text-muted); text-transform: uppercase; }
+    .metric-val { font-size: 1.75rem; font-weight: 600; margin-bottom: 0.25rem; color: var(--text-main); }
+    .metric-lbl { font-size: 0.75rem; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
     
     .c-hit { color: var(--color-hit); }
     .c-fault { color: var(--color-fault); }
     .c-evict { color: var(--color-evict); }
 
     .ref-track {
-        display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem; padding: 1rem; background: #F8FAFC; border-radius: 8px; border: 1px solid var(--border);
+        display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem; padding: 1rem;
+        background: var(--inset-bg); border-radius: 8px; border: 1px solid var(--border);
     }
     .ref-chip {
         width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
@@ -324,14 +387,23 @@
     }
     .frame-lbl { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
     .frame-box {
-        width: 100%; height: 80px; background: rgba(248, 250, 252, 0.8); border: 2px dashed var(--border);
+        width: 100%; height: 80px;
+        background: var(--inset-bg);
+        border: 2px dashed var(--border);
         border-radius: 12px; display: flex; align-items: center; justify-content: center;
         font-size: 1.75rem; font-weight: 600; transition: var(--transition); position: relative;
+        color: var(--text-muted);
     }
-    .frame-box.filled { background: #FFFFFF; border-style: solid; border-color: rgba(148, 163, 184, 0.5); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-    .frame-box.hit { border-color: var(--color-hit); background: rgba(16, 185, 129, 0.1); color: var(--color-hit); box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
-    .frame-box.fault { border-color: var(--color-fault); background: rgba(239, 68, 68, 0.1); color: var(--color-fault); box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
-    .frame-box.evict { border-color: var(--color-evict); background: rgba(245, 158, 11, 0.1); color: var(--color-evict); box-shadow: 0 0 15px rgba(245, 158, 11, 0.2); }
+    .frame-box.filled {
+        background: var(--panel-bg);
+        border-style: solid;
+        border-color: var(--border);
+        color: var(--text-main);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .frame-box.hit   { border-color: var(--color-hit);   background: rgba(77, 179, 112, 0.12);  color: var(--color-hit);   box-shadow: 0 0 16px rgba(77, 179, 112, 0.25); }
+    .frame-box.fault { border-color: var(--color-fault); background: rgba(212, 98, 98, 0.12);   color: var(--color-fault); box-shadow: 0 0 16px rgba(212, 98, 98, 0.25); }
+    .frame-box.evict { border-color: var(--color-evict); background: rgba(212, 153, 77, 0.12);  color: var(--color-evict); box-shadow: 0 0 16px rgba(212, 153, 77, 0.25); }
 
     .slide-in { animation: slideIn 0.3s ease forwards; }
     .pop-in { animation: popIn 0.3s ease forwards; }
@@ -343,15 +415,14 @@
     .disk-canvas-wrap {
         width: 100%;
         height: 400px;
-        background: rgba(255, 255, 255, 0.5);
-        backdrop-filter: blur(8px);
+        background: var(--canvas-bg);
         border-radius: 12px;
         border: 1px solid var(--border);
         position: relative;
         overflow: hidden;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);
     }
-    canvas { width: 100%; height: 100%; display: block; }
+    canvas { display: block; }
     /* Charts */
     .chart-container {
         display: flex;
@@ -394,15 +465,46 @@
         font-weight: 600;
         text-align: center;
     }
+
+    /* Gantt Chart Animations */
+    @keyframes ganttBlockIn {
+        from { transform: scaleX(0); transform-origin: left center; opacity: 0; }
+        to   { transform: scaleX(1); transform-origin: left center; opacity: 1; }
+    }
+    @keyframes ganttShimmer {
+        from { left: -100%; }
+        to   { left: 150%; }
+    }
+
+    /* Virtual Memory flow arrow glows */
+    .flow-arrow-line { transition: background 0.4s ease, box-shadow 0.4s ease; }
+    .flow-arrow-line.active {
+        background: var(--accent);
+        box-shadow: 0 0 8px var(--accent-glow);
+    }
+    .flow-arrow-head.active { border-top-color: var(--accent); }
 </style>
 </head>
 <body>
 
 <nav>
+    <div style="font-weight: 700; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem; color: var(--accent); margin-right: auto;">
+        <span style="background: var(--accent); color: white; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.9rem;">OS</span> Visualizer
+    </div>
     <button class="nav-btn active" onclick="switchTab('paging', this)">Virtual Memory</button>
     <button class="nav-btn" onclick="switchTab('replacement', this)">Page Replacement</button>
     <button class="nav-btn" onclick="switchTab('disk', this)">Disk Scheduling</button>
+    <button class="nav-btn" onclick="switchTab('cpu', this)">CPU Scheduler</button>
 </nav>
+
+<header style="max-width: 1200px; margin: 4rem auto 0; padding: 0 2rem; text-align: center;">
+    <h1 style="font-size: 3.5rem; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 1rem; background: linear-gradient(135deg, #FFF 0%, #8B5CF6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+        Operating System Visualizer
+    </h1>
+    <p style="color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+        Explore core OS concepts through interactive simulations and real-time visual analytics. Premium educational tool for computer science students.
+    </p>
+</header>
 
 <main>
     <!-- MODULE: VIRTUAL MEMORY (PAGING) -->
@@ -410,8 +512,9 @@
         <div class="card">
             <h2 class="card-title">Virtual Memory Implementation (Paging Mapping)</h2>
             <div class="paging-container">
-                <div>
-                    <div class="controls" style="flex-direction: column; align-items: stretch; margin-bottom: 1rem;">
+                <!-- Left: Controls + Explanation -->
+                <div style="display:flex;flex-direction:column;gap:1rem;">
+                    <div class="controls" style="flex-direction:column;align-items:stretch;gap:0.75rem;">
                         <div class="input-group">
                             <label>Logical Address (Decimal)</label>
                             <input type="number" id="pg-addr" value="8500" min="0">
@@ -419,55 +522,83 @@
                         <div class="input-group">
                             <label>Page Size</label>
                             <select id="pg-size">
-                                <option value="1024">1 KB</option>
-                                <option value="4096" selected>4 KB</option>
+                                <option value="1024">1 KB (1024 B)</option>
+                                <option value="4096" selected>4 KB (4096 B)</option>
                             </select>
                         </div>
-                        <button class="btn btn-primary" onclick="animatePaging()" style="justify-content:center;">Translate Address</button>
+                        <button class="btn btn-primary" onclick="animatePaging()" style="justify-content:center;">&#9654; Translate Address</button>
                     </div>
-                    
-                    <div class="explanation-panel" id="pg-expl">
-                        Enter an address to see the translation process.
-                    </div>
+                    <div class="explanation-panel" id="pg-expl">Enter a logical address and click <strong>Translate Address</strong> to see the step-by-step paging process.</div>
                 </div>
 
+                <!-- Right: Flow Diagram -->
                 <div class="diagram-area" id="diagram-area">
-                    <svg id="paging-svg"></svg>
-                    
-                    <div class="block" id="blk-logical">
-                        <div class="block-title">Logical Address</div>
-                        <div class="block-val" id="val-logical">8500</div>
-                        <div class="block-split">
-                            <div class="split-item" id="val-p">Page: -</div>
-                            <div class="split-item" id="val-d1">Offset: -</div>
+                    <svg class="diagram-svg-overlay" id="paging-svg"></svg>
+
+                    <!-- Main flow column -->
+                    <div class="flow-col">
+
+                        <!-- Step 1: Logical Address -->
+                        <div class="block" id="blk-logical">
+                            <div class="block-title">&#9312; Logical Address (CPU)</div>
+                            <div class="block-val" id="val-logical">8500</div>
+                            <div class="block-sub" id="val-logical-bin"></div>
+                            <div class="block-split">
+                                <div class="split-item" id="val-p">Page #: ?</div>
+                                <div class="split-item" id="val-d1">Offset: ?</div>
+                            </div>
+                        </div>
+
+                        <!-- Arrow down: Check TLB -->
+                        <div class="flow-arrow" id="arrow1">
+                            <div class="flow-arrow-label" id="arrow1-lbl">Check TLB</div>
+                            <div class="flow-arrow-line" id="arrow1-line"></div>
+                            <div class="flow-arrow-head" id="arrow1-head"></div>
+                        </div>
+
+                        <!-- Step 2: TLB / Page Table result -->
+                        <div class="block" id="blk-lookup">
+                            <div class="block-title" id="lookup-title">&#9313; TLB / Page Table Lookup</div>
+                            <div style="font-size:0.85rem;color:var(--text-muted);" id="lookup-result">Pending...</div>
+                        </div>
+
+                        <!-- Arrow down: Combine Frame + Offset -->
+                        <div class="flow-arrow" id="arrow2">
+                            <div class="flow-arrow-label" id="arrow2-lbl">Frame # + Offset</div>
+                            <div class="flow-arrow-line" id="arrow2-line"></div>
+                            <div class="flow-arrow-head" id="arrow2-head"></div>
+                        </div>
+
+                        <!-- Step 3: Physical Address -->
+                        <div class="block" id="blk-physical">
+                            <div class="block-title">&#9314; Physical Memory Address</div>
+                            <div class="block-val" id="val-physical">----</div>
+                            <div class="block-sub" id="val-physical-bin"></div>
+                            <div class="block-split">
+                                <div class="split-item" id="val-f">Frame: ?</div>
+                                <div class="split-item" id="val-d2">Offset: ?</div>
+                            </div>
+                        </div>
+
+                    </div><!-- end flow-col -->
+
+                    <!-- Lookup tables column -->
+                    <div class="lookup-col">
+                        <div class="block" id="blk-tlb">
+                            <div class="block-title" title="Translation Lookaside Buffer">TLB Cache</div>
+                            <table class="pt-table" id="tlb-table">
+                                <tr><th>Page</th><th>Frame</th></tr>
+                            </table>
+                        </div>
+                        <div class="block" id="blk-pt">
+                            <div class="block-title">Page Table</div>
+                            <table class="pt-table" id="pt-table">
+                                <tr><th>Page</th><th>Frame</th></tr>
+                            </table>
                         </div>
                     </div>
 
-                    <div class="block" id="blk-tlb">
-                        <div class="block-title" title="Translation Lookaside Buffer">TLB Cache</div>
-                        <table class="pt-table" id="tlb-table">
-                            <tr><th>Page</th><th>Frame</th></tr>
-                            <!-- populated by JS -->
-                        </table>
-                    </div>
-
-                    <div class="block" id="blk-pt">
-                        <div class="block-title">Page Table</div>
-                        <table class="pt-table" id="pt-table">
-                            <tr><th>Page</th><th>Frame</th></tr>
-                            <!-- populated by JS -->
-                        </table>
-                    </div>
-
-                    <div class="block" id="blk-physical">
-                        <div class="block-title">Physical Memory Address</div>
-                        <div class="block-val" id="val-physical">----</div>
-                        <div class="block-split">
-                            <div class="split-item" id="val-f">Frame: -</div>
-                            <div class="split-item" id="val-d2">Offset: -</div>
-                        </div>
-                    </div>
-                </div>
+                </div><!-- end diagram-area -->
             </div>
         </div>
     </section>
@@ -513,13 +644,12 @@
             </div>
 
             <div style="margin-top: 2rem;">
-                <h3 style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Execution Logs</h3>
-                <div id="pr-logs" style="font-family: monospace; font-size: 0.85rem; color: var(--text-muted); height: 160px; overflow-y: auto; background: #F8FAFC; padding: 1rem; border-radius: 8px; border: 1px solid var(--border); line-height: 1.8;">
+                <h3 style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em;">Execution Logs</h3>
+                <div id="pr-logs" style="font-family: monospace; font-size: 0.85rem; color: var(--text-muted); background: var(--inset-bg); padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border); line-height: 1.9;">
                 </div>
             </div>
         </div>
     </section>
-
     <!-- MODULE: DISK SCHEDULING -->
     <section id="module-disk" class="module">
         <div class="card">
@@ -536,7 +666,16 @@
                 </div>
                 <div class="input-group" style="flex:0.5; min-width: 100px;">
                     <label>Total Cylinders</label>
-                    <input type="number" id="ds-cyl" value="200" min="50" readonly title="0 to 199">
+                    <input type="number" id="ds-cyl" value="200" min="10" max="9999"
+                        oninput="dsDrawPath(false)"
+                        title="Cylinders are numbered 0 to (Total − 1)">
+                </div>
+                <div class="input-group" style="flex:0.5; min-width: 130px;" id="ds-dir-group">
+                    <label>Initial Direction</label>
+                    <select id="ds-dir" onchange="dsDrawPath(false)">
+                        <option value="up">▲ Towards Higher</option>
+                        <option value="down">▼ Towards Lower</option>
+                    </select>
                 </div>
             </div>
             
@@ -570,6 +709,71 @@
             </div>
         </div>
     </section>
+    
+    <!-- MODULE: CPU SCHEDULING -->
+    <section id="module-cpu" class="module">
+        <div class="card">
+            <h2 class="card-title">CPU Scheduling Simulator</h2>
+            
+            <div class="controls">
+                <div class="input-group" style="flex:2">
+                    <label>Process List (Arrival, Burst)</label>
+                    <input type="text" id="cpu-processes" value="P1(0, 5), P2(1, 3), P3(2, 8), P4(3, 6)">
+                </div>
+                <div class="input-group" style="flex:0.5; min-width: 100px;">
+                    <label>Quantum (RR)</label>
+                    <input type="number" id="cpu-quantum" value="2" min="1">
+                </div>
+                <div class="pill-group" id="cpu-algo-group">
+                    <button class="pill active" onclick="setCpuAlgo('FCFS', this)">FCFS</button>
+                    <button class="pill" onclick="setCpuAlgo('SJF', this)">SJF</button>
+                    <button class="pill" onclick="setCpuAlgo('SRTF', this)">SRTF</button>
+                    <button class="pill" onclick="setCpuAlgo('RR', this)">RR</button>
+                </div>
+                <button class="btn btn-primary" onclick="cpuRun()">Run Simulation</button>
+                <button class="btn btn-secondary" onclick="cpuCompareAll()" style="margin-left: auto;">Compare All</button>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <h3 style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 1rem; text-transform: uppercase;">Execution Gantt Chart</h3>
+                <div id="cpu-gantt" style="display: flex; height: 60px; background: var(--inset-bg); border-radius: 8px; overflow: hidden; border: 1px solid var(--border);">
+                    <!-- Gantt blocks will be injected here -->
+                </div>
+                <div id="cpu-gantt-labels" style="display: flex; margin-top: 0.5rem; font-family: monospace; font-size: 0.8rem; color: var(--text-muted);">
+                    <!-- Time markers -->
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <table class="pt-table" id="cpu-table">
+                    <thead>
+                        <tr>
+                            <th>Process</th>
+                            <th>Arrival</th>
+                            <th>Burst</th>
+                            <th>Completion</th>
+                            <th>Turnaround</th>
+                            <th>Waiting</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cpu-results">
+                        <!-- Table rows will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="metrics" style="margin-top: 1.5rem;">
+                <div class="metric"><div class="metric-val" id="cpu-avg-tat">0.0</div><div class="metric-lbl">Avg Turnaround Time</div></div>
+                <div class="metric"><div class="metric-val" id="cpu-avg-wt">0.0</div><div class="metric-lbl">Avg Waiting Time</div></div>
+            </div>
+
+            <div id="cpu-compare-area" style="margin-top: 2rem; display: none; animation: fadeIn 0.4s ease;">
+                <h3 style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.06em;">Algorithm Comparison (Avg Waiting Time)</h3>
+                <div class="chart-container" id="cpu-chart"></div>
+                <table class="pt-table" id="cpu-compare-table" style="width:100%;margin-top:1rem;text-align:left;"></table>
+            </div>
+        </div>
+    </section>
 </main>
 
 <script>
@@ -580,17 +784,26 @@ function switchTab(tabId, btn) {
     
     if (btn) btn.classList.add('active');
     document.getElementById('module-' + tabId).classList.add('active');
+    
+    if (tabId === 'disk') {
+        setTimeout(() => dsDrawPath(true), 80);
+    }
 }
 
-// --- MODULE 1: PAGING ---
-const ptDummy = {0: 5, 1: 2, 2: 8, 3: 1, 4: 9, 5: 3, 6: 7, 7: 4, 8: 0, 9: 6};
+// Virtual Memory page table — 32 pages mapped to frames (so large addresses work)
+const ptDummy = {
+    0:5, 1:2, 2:8, 3:1, 4:9, 5:3, 6:7, 7:4,
+    8:0, 9:6, 10:11,11:14,12:7, 13:3, 14:9, 15:12,
+    16:2,17:5, 18:13,19:1, 20:10,21:6, 22:15,23:8,
+    24:4,25:0, 26:11,27:7, 28:3, 29:14,30:6, 31:9
+};
 let tlb = [];
-const TLB_SIZE = 3;
+const TLB_SIZE = 4;
 
 function initPtTable() {
     let html = '<tr><th>Page</th><th>Frame</th></tr>';
-    for(let i=0; i<=9; i++) {
-        html += `<tr id="ptr-${i}"><td>${i}</td><td>${ptDummy[i]||'-'}</td></tr>`;
+    for (let i = 0; i <= 31; i++) {
+        html += `<tr id="ptr-${i}"><td>${i}</td><td>${ptDummy[i] !== undefined ? ptDummy[i] : '-'}</td></tr>`;
     }
     document.getElementById('pt-table').innerHTML = html;
 }
@@ -610,61 +823,111 @@ function renderTlb() {
 initPtTable();
 renderTlb();
 
+// Encode color to a safe SVG id
+function colorToId(color) {
+    return color.replace('#','').replace(/[^a-zA-Z0-9]/g, '_');
+}
+
+function ensureSvgDefs(svg, color) {
+    const markerId = 'arrowhead-' + colorToId(color);
+    const filterId  = 'glow-' + colorToId(color);
+    if (document.getElementById(markerId)) return { markerId, filterId };
+
+    // Build defs block if not present
+    let defs = svg.querySelector('defs');
+    if (!defs) {
+        defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        svg.insertBefore(defs, svg.firstChild);
+    }
+
+    // Per-color arrowhead marker
+    defs.innerHTML += `
+        <marker id="${markerId}" markerWidth="10" markerHeight="8"
+                refX="8" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+            <path d="M0,1 L9,4 L0,7 Z" fill="${color}" stroke="none"/>
+        </marker>
+        <filter id="${filterId}" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="2.5" result="blur"/>
+            <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>`;
+
+    return { markerId, filterId };
+}
+
 function createSvgPath(svg, el1, el2, color, isDashed = false) {
     const r1 = el1.getBoundingClientRect();
     const r2 = el2.getBoundingClientRect();
     const sr = svg.getBoundingClientRect();
-    
-    let x1 = r1.right - sr.left;
-    let y1 = r1.top + r1.height/2 - sr.top;
-    let x2 = r2.left - sr.left;
-    let y2 = r2.top + r2.height/2 - sr.top;
-    
-    let d = `M ${x1} ${y1} C ${x1+40} ${y1}, ${x2-40} ${y2}, ${x2} ${y2}`;
 
-    // adjust if el2 is far below or drawing offset line under boxes
+    let x1, y1, x2, y2, d;
+
     if (isDashed) {
-        x1 = r1.left + r1.width/2 - sr.left;
+        // Offset/dashed path — curves downward below the boxes
+        x1 = r1.left + r1.width / 2 - sr.left;
         y1 = r1.bottom - sr.top;
-        x2 = r2.left + r2.width/2 - sr.left;
+        x2 = r2.left + r2.width / 2 - sr.left;
         y2 = r2.bottom - sr.top;
-        d = `M ${x1} ${y1} C ${x1} ${y1+80}, ${x2} ${y2+80}, ${x2} ${y2}`;
-    } else if (r2.top > r1.bottom) {
-        x1 = r1.left + r1.width/2 - sr.left;
+        const bow = 70;
+        d = `M ${x1} ${y1} C ${x1} ${y1 + bow}, ${x2} ${y2 + bow}, ${x2} ${y2}`;
+    } else if (r2.top > r1.bottom + 5) {
+        // Downward flow — exit bottom of el1, enter top of el2
+        x1 = r1.left + r1.width / 2 - sr.left;
         y1 = r1.bottom - sr.top;
-        x2 = r2.left + r2.width/2 - sr.left;
+        x2 = r2.left + r2.width / 2 - sr.left;
         y2 = r2.top - sr.top;
-        d = `M ${x1} ${y1} C ${x1} ${y1+40}, ${x2} ${y2-40}, ${x2} ${y2}`;
+        const dy = Math.max((y2 - y1) * 0.45, 30);
+        d = `M ${x1} ${y1} C ${x1} ${y1 + dy}, ${x2} ${y2 - dy}, ${x2} ${y2}`;
+    } else {
+        // Horizontal / cross connection — exit right of el1, enter left of el2
+        x1 = r1.right - sr.left;
+        y1 = r1.top + r1.height / 2 - sr.top;
+        x2 = r2.left - sr.left;
+        y2 = r2.top + r2.height / 2 - sr.top;
+        const dx = Math.max(Math.abs(x2 - x1) * 0.5, 40);
+        d = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
     }
 
+    const { markerId, filterId } = ensureSvgDefs(svg, color);
+
+    // Glow path (slightly thicker, blurred duplicate behind)
+    const glow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    glow.setAttribute('d', d);
+    glow.setAttribute('stroke', color);
+    glow.setAttribute('stroke-width', isDashed ? '3' : '4');
+    glow.setAttribute('fill', 'none');
+    glow.setAttribute('opacity', '0.35');
+    glow.setAttribute('filter', `url(#${filterId})`);
+    if (isDashed) glow.setAttribute('stroke-dasharray', '6,5');
+    svg.appendChild(glow);
+
+    // Main path
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', d);
     path.setAttribute('stroke', color);
-    path.setAttribute('stroke-width', '2');
+    path.setAttribute('stroke-width', isDashed ? '1.5' : '2');
     path.setAttribute('fill', 'none');
-    if (isDashed) path.setAttribute('stroke-dasharray', '5,5');
-    
-    // Marker definition if missing
-    if (!document.getElementById('arrowhead')) {
-        svg.innerHTML += `
-            <defs>
-                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                    <polygon points="0 0, 10 3.5, 0 7" fill="#6B7280" />
-                </marker>
-            </defs>`;
-    }
-    path.setAttribute('marker-end', 'url(#arrowhead)');
-    
-    // Animate line drawing
-    const len = path.getTotalLength() || 500;
-    path.style.strokeDasharray = len + ' ' + len;
-    path.style.strokeDashoffset = len;
-    path.style.transition = 'stroke-dashoffset 0.6s ease-in-out';
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('stroke-linejoin', 'round');
+    if (isDashed) path.setAttribute('stroke-dasharray', '6,5');
+    path.setAttribute('marker-end', `url(#${markerId})`);
+
+    // Draw-on animation
+    const len = path.getTotalLength ? path.getTotalLength() : 300;
+    path.style.strokeDasharray = `${len} ${len}`;
+    path.style.strokeDashoffset = `${len}`;
+    path.style.transition = 'stroke-dashoffset 0.65s cubic-bezier(0.4,0,0.2,1)';
     svg.appendChild(path);
-    
-    // Trigger layout to apply transition
+
+    // Force reflow then animate
     path.getBoundingClientRect();
     path.style.strokeDashoffset = '0';
+    glow.style.opacity = '0';
+    glow.style.transition = 'opacity 0.65s ease';
+    glow.getBoundingClientRect();
+    glow.style.opacity = '0.35';
 }
 
 function animatePaging() {
@@ -680,45 +943,41 @@ function animatePaging() {
     const d = la % size;
     const offsetBits = Math.log2(size);
     
-    document.getElementById('val-logical').innerHTML = `${la}<br><span style="font-size:0.8rem;color:#6B7280;font-weight:400">BIN: ${la.toString(2)}</span>`;
-    document.getElementById('val-p').innerHTML = `Page: ${p}<br><span style="font-size:0.75rem;color:#6B7280;font-weight:400">${p.toString(2)}</span>`;
-    document.getElementById('val-d1').innerHTML = `Offset: ${d}<br><span style="font-size:0.75rem;color:#6B7280;font-weight:400">${d.toString(2).padStart(offsetBits, '0')}</span>`;
+    document.getElementById('val-logical').innerHTML = `${la}<br><span style="font-size:0.8rem;color:var(--text-muted);font-weight:400">BIN: ${la.toString(2)}</span>`;
+    document.getElementById('val-p').innerHTML = `Page: ${p}<br><span style="font-size:0.75rem;color:var(--text-muted);font-weight:400">${p.toString(2)}</span>`;
+    document.getElementById('val-d1').innerHTML = `Offset: ${d}<br><span style="font-size:0.75rem;color:var(--text-muted);font-weight:400">${d.toString(2).padStart(offsetBits, '0')}</span>`;
     
-    document.getElementById('pg-expl').innerHTML = `<strong>Step 1:</strong> Logical Address (${la}) is logically split into Page Number (<strong>${p}</strong>) and Offset (<strong>${d}</strong>) using Page Size (${size} bytes = 2^${offsetBits}).`;
+    document.getElementById('pg-expl').innerHTML = `<strong>Step 1:</strong> Logical Address (<strong>${la}</strong>) split into Page # = ⌊${la} ÷ ${size}⌋ = <strong>${p}</strong> and Offset = ${la} mod ${size} = <strong>${d}</strong>.`;
     
     setTimeout(() => {
         let tlbEntry = tlb.find(e => e.p === p);
         if (tlbEntry) {
-            // TLB HIT
-            document.getElementById('pg-expl').innerHTML += `<br><br><strong>Step 2 (<span class="c-hit">TLB HIT</span>):</strong> Page <strong>${p}</strong> found in TLB Cache! Extremely fast translation.`;
+            document.getElementById('lookup-result').innerHTML = `<span class="c-hit">✓ TLB HIT — Frame ${tlbEntry.f}</span>`;
+            document.getElementById('pg-expl').innerHTML += `<br><br><strong>Step 2 (<span class="c-hit">TLB HIT</span>):</strong> Page <strong>${p}</strong> found in TLB Cache → Frame <strong>${tlbEntry.f}</strong>. No page table access needed.`;
             const tRow = document.getElementById(`tlb-${p}`);
-            if(tRow) {
+            if (tRow) {
                 tRow.classList.add('highlight');
                 createSvgPath(svg, document.getElementById('blk-logical'), tRow, '#10B981');
-                setTimeout(() => {
-                    finishPagingAnim(p, tlbEntry.f, d, size, offsetBits, svg, tRow);
-                }, 800);
+                setTimeout(() => finishPagingAnim(p, tlbEntry.f, d, size, offsetBits, svg, tRow), 900);
             }
-        } else {
-            // TLB MISS
+        } else if (ptDummy[p] !== undefined) {
+            // TLB MISS — page exists in page table
+            document.getElementById('lookup-result').innerHTML = `<span class="c-fault">✗ TLB MISS</span> — checking page table`;
             document.getElementById('pg-expl').innerHTML += `<br><br><strong>Step 2 (<span class="c-fault">TLB MISS</span>):</strong> Page <strong>${p}</strong> not in TLB. Accessing Main Page Table.`;
             const pRow = document.getElementById(`ptr-${p}`);
-            if(pRow) {
+            if (pRow) {
                 createSvgPath(svg, document.getElementById('blk-logical'), pRow, '#3B82F6');
                 pRow.classList.add('highlight');
-                document.getElementById('pg-expl').innerHTML += `<br><br><strong>Step 3:</strong> Look up Page <strong>${p}</strong> in Page Table. Frame Number is <strong>${ptDummy[p]}</strong>.`;
-                
-                // Update TLB
-                if(tlb.length >= TLB_SIZE) tlb.shift();
-                tlb.push({p: p, f: ptDummy[p]});
+                document.getElementById('pg-expl').innerHTML += `<br><br><strong>Step 3:</strong> Page Table entry found — Page <strong>${p}</strong> → Frame <strong>${ptDummy[p]}</strong>. Loading into TLB.`;
+                if (tlb.length >= TLB_SIZE) tlb.shift();
+                tlb.push({ p: p, f: ptDummy[p] });
                 renderTlb();
-                
-                setTimeout(() => {
-                    finishPagingAnim(p, ptDummy[p], d, size, offsetBits, svg, pRow);
-                }, 800);
-            } else {
-                document.getElementById('pg-expl').innerHTML += `<br><br><strong>Error:</strong> Page ${p} not found in Page Table (Page Fault).`;
+                setTimeout(() => finishPagingAnim(p, ptDummy[p], d, size, offsetBits, svg, pRow), 900);
             }
+        } else {
+            // Page fault — page not in page table
+            document.getElementById('lookup-result').innerHTML = `<span class="c-fault">PAGE FAULT — page ${p} not mapped</span>`;
+            document.getElementById('pg-expl').innerHTML += `<br><br><strong>Step 2 (<span class="c-fault">TLB MISS</span>):</strong> Page <strong>${p}</strong> not in TLB.<br><br><strong>Step 3 (<span class="c-fault">PAGE FAULT</span>):</strong> Page <strong>${p}</strong> is not mapped in the Page Table. OS must load it from disk into a free frame.`;
         }
     }, 800);
 }
@@ -726,9 +985,9 @@ function animatePaging() {
 function finishPagingAnim(p, f, d, size, offsetBits, svg, sourceEl) {
     const pa = (f * size) + d;
     
-    document.getElementById('val-f').innerHTML = `Frame: ${f}<br><span style="font-size:0.75rem;color:#6B7280;font-weight:400">${f.toString(2)}</span>`;
-    document.getElementById('val-d2').innerHTML = `Offset: ${d}<br><span style="font-size:0.75rem;color:#6B7280;font-weight:400">${d.toString(2).padStart(offsetBits, '0')}</span>`;
-    document.getElementById('val-physical').innerHTML = `${pa}<br><span style="font-size:0.8rem;color:#6B7280;font-weight:400">BIN: ${pa.toString(2)}</span>`;
+    document.getElementById('val-f').innerHTML = `Frame: ${f}<br><span style="font-size:0.75rem;color:var(--text-muted);font-weight:400">${f.toString(2)}</span>`;
+    document.getElementById('val-d2').innerHTML = `Offset: ${d}<br><span style="font-size:0.75rem;color:var(--text-muted);font-weight:400">${d.toString(2).padStart(offsetBits, '0')}</span>`;
+    document.getElementById('val-physical').innerHTML = `${pa}<br><span style="font-size:0.8rem;color:var(--text-muted);font-weight:400">BIN: ${pa.toString(2)}</span>`;
     
     createSvgPath(svg, sourceEl, document.getElementById('blk-physical'), '#10B981');
     createSvgPath(svg, document.getElementById('val-d1'), document.getElementById('val-d2'), '#9CA3AF', true);
@@ -897,12 +1156,16 @@ function prStep() {
         }
     }
     
-    let frameStateStr = '[' + Array.from({length: n}, (_, i) => prFrames[i] !== undefined ? prFrames[i] : '-').join(', ') + ']';
-    logMsg += ` <span style="margin-left: 10px; color:var(--accent); font-weight:600;">Frames: ${frameStateStr}</span>`;
+    // Build frame state badges
+    const frameState = Array.from({length: n}, (_, i) =>
+        prFrames[i] !== undefined
+            ? `<span style="display:inline-block;min-width:22px;padding:0 5px;background:var(--panel-bg);border:1px solid var(--border);border-radius:4px;text-align:center;color:var(--text-main);font-weight:600;">${prFrames[i]}</span>`
+            : `<span style="display:inline-block;min-width:22px;padding:0 5px;background:var(--inset-bg);border:1px dashed var(--border);border-radius:4px;text-align:center;color:var(--text-muted);">-</span>`
+    ).join(' ');
+    const frameLabel = `<span style="color:var(--accent);font-weight:600;margin-right:6px;">Frames:</span>${frameState}`;
 
     let logs = document.getElementById('pr-logs');
-    logs.innerHTML += `<div>${logMsg}</div>`;
-    logs.scrollTop = logs.scrollHeight;
+    logs.innerHTML += `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);"><span>${logMsg}</span><span style="flex-shrink:0;margin-left:1.5rem;">${frameLabel}</span></div>`;
 
     renderPrFrames(statusObj);
     updatePrMetrics();
@@ -1009,23 +1272,33 @@ prReset();
 // --- MODULE 3: DISK SCHEDULING ---
 let dsAlgo = 'FCFS';
 
+const DS_NEEDS_DIR = ['SCAN','C-SCAN','LOOK','C-LOOK'];
+
 function setDsAlgo(algo, btn) {
     document.querySelectorAll('#ds-algo-group .pill').forEach(p => p.classList.remove('active'));
-    if(btn) btn.classList.add('active');
+    if (btn) btn.classList.add('active');
     dsAlgo = algo;
-    dsDrawPath(false);
+    const dirGroup = document.getElementById('ds-dir-group');
+    if (dirGroup) dirGroup.style.display = DS_NEEDS_DIR.includes(algo) ? '' : 'none';
+    dsDrawPath(true);
 }
 
 function dsGetParams() {
     const raw = document.getElementById('ds-queue').value;
-    const queue = raw.split(/[\s,]+/).filter(x => x.trim() !== '').map(Number);
-    const head = parseInt(document.getElementById('ds-head').value) || 53;
-    const maxCyl = parseInt(document.getElementById('ds-cyl').value) || 200;
-    return { queue, head, maxCyl: maxCyl - 1 }; // 0 to 199 means max is 199
+    const queue = raw.split(/[\s,]+/).filter(x => x.trim() !== '').map(Number).filter(n => !isNaN(n));
+    const totalCyl = Math.max(10, parseInt(document.getElementById('ds-cyl').value) || 200);
+    const maxCyl = totalCyl - 1;               // cylinders are 0 … (totalCyl-1)
+    const head = Math.min(parseInt(document.getElementById('ds-head').value) || 53, maxCyl);
+    return { queue, head, maxCyl };
+}
+
+function dsGetDirection() {
+    return (document.getElementById('ds-dir') || {value:'up'}).value || 'up';
 }
 
 function computeDsSeq() {
     const { queue, head, maxCyl } = dsGetParams();
+    const dir = dsGetDirection();
     let seq = [head];
     let pos = head;
     let total = 0;
@@ -1033,60 +1306,79 @@ function computeDsSeq() {
 
     if (dsAlgo === 'FCFS') {
         q.forEach(c => { total += Math.abs(c - pos); pos = c; seq.push(c); });
-    } 
+    }
     else if (dsAlgo === 'SSTF') {
         while (q.length > 0) {
-            let bestIdx = -1;
-            let minDist = Infinity;
-            for(let i=0; i<q.length; i++) {
+            let bestIdx = -1, minDist = Infinity;
+            for (let i = 0; i < q.length; i++) {
                 let dist = Math.abs(q[i] - pos);
                 if (dist < minDist) { minDist = dist; bestIdx = i; }
             }
             let next = q.splice(bestIdx, 1)[0];
             total += minDist; pos = next; seq.push(pos);
         }
-    } 
+    }
     else if (dsAlgo === 'SCAN') {
-        // Assume default direction UP towards maxCyl
-        let up = q.filter(c => c >= pos).sort((a,b)=>a-b);
-        let down = q.filter(c => c < pos).sort((a,b)=>b-a);
-        
-        up.forEach(c => { total += Math.abs(c - pos); pos = c; seq.push(c); });
-        // MUST travel to absolute end
-        if (up.length > 0 || down.length > 0) {
-            if (pos !== maxCyl) { total += Math.abs(maxCyl - pos); pos = maxCyl; seq.push(pos); }
+        if (dir === 'up') {
+            let up   = q.filter(c => c >= pos).sort((a,b) => a-b);
+            let down = q.filter(c => c <  pos).sort((a,b) => b-a);
+            up.forEach(c => { total += Math.abs(c-pos); pos=c; seq.push(c); });
+            if (pos !== maxCyl) { total += maxCyl-pos; pos=maxCyl; seq.push(pos); }
+            down.forEach(c => { total += Math.abs(c-pos); pos=c; seq.push(c); });
+        } else {
+            let down = q.filter(c => c <= pos).sort((a,b) => b-a);
+            let up   = q.filter(c => c >  pos).sort((a,b) => a-b);
+            down.forEach(c => { total += Math.abs(c-pos); pos=c; seq.push(c); });
+            if (pos !== 0) { total += pos; pos=0; seq.push(pos); }
+            up.forEach(c => { total += Math.abs(c-pos); pos=c; seq.push(c); });
         }
-        down.forEach(c => { total += Math.abs(c - pos); pos = c; seq.push(c); });
-    } 
+    }
     else if (dsAlgo === 'C-SCAN') {
-        let up = q.filter(c => c >= pos).sort((a,b)=>a-b);
-        let down = q.filter(c => c < pos).sort((a,b)=>a-b);
-        
-        up.forEach(c => { total += Math.abs(c - pos); pos = c; seq.push(c); });
-        // Go to end
-        if (pos !== maxCyl) { total += Math.abs(maxCyl - pos); pos = maxCyl; seq.push(pos); }
-        if (down.length > 0) {
-            // Jump to 0. Count jump.
-            total += Math.abs(0 - pos); pos = 0; seq.push(pos);
-            down.forEach(c => { total += Math.abs(c - pos); pos = c; seq.push(c); });
+        if (dir === 'up') {
+            let up   = q.filter(c => c >= pos).sort((a,b) => a-b);
+            let down = q.filter(c => c <  pos).sort((a,b) => a-b);
+            up.forEach(c => { total += Math.abs(c-pos); pos=c; seq.push(c); });
+            if (pos !== maxCyl) { total += maxCyl-pos; pos=maxCyl; seq.push(pos); }
+            if (down.length > 0) { total += pos; pos=0; seq.push(0);
+                down.forEach(c => { total += Math.abs(c-pos); pos=c; seq.push(c); }); }
+        } else {
+            let down = q.filter(c => c <= pos).sort((a,b) => b-a);
+            let up   = q.filter(c => c >  pos).sort((a,b) => b-a);
+            down.forEach(c => { total += Math.abs(c-pos); pos=c; seq.push(c); });
+            if (pos !== 0) { total += pos; pos=0; seq.push(pos); }
+            if (up.length > 0) { total += maxCyl; pos=maxCyl; seq.push(maxCyl);
+                up.forEach(c => { total += Math.abs(c-pos); pos=c; seq.push(c); }); }
         }
-    } 
+    }
     else if (dsAlgo === 'LOOK') {
-        let up = q.filter(c => c >= pos).sort((a,b)=>a-b);
-        let down = q.filter(c => c < pos).sort((a,b)=>b-a);
-        up.forEach(c => { total += Math.abs(c - pos); pos = c; seq.push(c); });
-        // Reverses directly, no going to end
-        down.forEach(c => { total += Math.abs(c - pos); pos = c; seq.push(c); });
-    } 
+        if (dir === 'up') {
+            let up   = q.filter(c => c >= pos).sort((a,b) => a-b);
+            let down = q.filter(c => c <  pos).sort((a,b) => b-a);
+            up.forEach(c => { total += Math.abs(c-pos); pos=c; seq.push(c); });
+            down.forEach(c => { total += Math.abs(c-pos); pos=c; seq.push(c); });
+        } else {
+            let down = q.filter(c => c <= pos).sort((a,b) => b-a);
+            let up   = q.filter(c => c >  pos).sort((a,b) => a-b);
+            down.forEach(c => { total += Math.abs(c-pos); pos=c; seq.push(c); });
+            up.forEach(c => { total += Math.abs(c-pos); pos=c; seq.push(c); });
+        }
+    }
     else if (dsAlgo === 'C-LOOK') {
-        let up = q.filter(c => c >= pos).sort((a,b)=>a-b);
-        let down = q.filter(c => c < pos).sort((a,b)=>a-b);
-        up.forEach(c => { total += Math.abs(c - pos); pos = c; seq.push(c); });
-        if (down.length > 0) {
-            // Jump directly to lowest request
-            total += Math.abs(down[0] - pos); pos = down[0]; seq.push(pos);
-            for(let i=1; i<down.length; i++) {
-                total += Math.abs(down[i] - pos); pos = down[i]; seq.push(pos);
+        if (dir === 'up') {
+            let up   = q.filter(c => c >= pos).sort((a,b) => a-b);
+            let down = q.filter(c => c <  pos).sort((a,b) => a-b);
+            up.forEach(c => { total += Math.abs(c-pos); pos=c; seq.push(c); });
+            if (down.length > 0) {
+                total += Math.abs(down[0]-pos); pos=down[0]; seq.push(pos);
+                for (let i=1; i<down.length; i++) { total += Math.abs(down[i]-pos); pos=down[i]; seq.push(pos); }
+            }
+        } else {
+            let down = q.filter(c => c <= pos).sort((a,b) => b-a);
+            let up   = q.filter(c => c >  pos).sort((a,b) => b-a);
+            down.forEach(c => { total += Math.abs(c-pos); pos=c; seq.push(c); });
+            if (up.length > 0) {
+                total += Math.abs(up[0]-pos); pos=up[0]; seq.push(pos);
+                for (let i=1; i<up.length; i++) { total += Math.abs(up[i]-pos); pos=up[i]; seq.push(pos); }
             }
         }
     }
@@ -1100,8 +1392,9 @@ function dsDrawPath(animate = false) {
     
     const canvas = document.getElementById('ds-canvas');
     const wrap = canvas.parentElement;
-    canvas.width = wrap.clientWidth;
-    canvas.height = wrap.clientHeight;
+    const rect = wrap.getBoundingClientRect();
+    canvas.width = rect.width || wrap.offsetWidth || 800;
+    canvas.height = rect.height || wrap.offsetHeight || 400;
     const ctx = canvas.getContext('2d');
     
     const { seq, total } = computeDsSeq();
@@ -1126,9 +1419,9 @@ function dsDrawPath(animate = false) {
     
     // Draw Grid with all lines requested
     ctx.clearRect(0,0, canvas.width, canvas.height);
-    ctx.strokeStyle = '#E5E7EB';
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--canvas-grid').trim() || '#333336';
     ctx.lineWidth = 1;
-    ctx.fillStyle = '#6B7280';
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--canvas-text').trim() || '#C0C0C6';
     ctx.font = '11px Inter';
     ctx.textAlign = 'center';
     
@@ -1139,10 +1432,15 @@ function dsDrawPath(animate = false) {
         ctx.fillText(Math.round(v), vx, textY);
     });
     
+    const csPath  = getComputedStyle(document.documentElement).getPropertyValue('--canvas-path').trim()  || '#5B9CF6';
+    const csStart = getComputedStyle(document.documentElement).getPropertyValue('--canvas-dot-start').trim() || '#4DB370';
+    const csStop  = getComputedStyle(document.documentElement).getPropertyValue('--canvas-dot-stop').trim()  || '#D46262';
+    const csLabel = getComputedStyle(document.documentElement).getPropertyValue('--canvas-dot-label').trim() || '#C0C0C6';
+
     if (!animate) {
         // Draw static path
         ctx.beginPath();
-        ctx.strokeStyle = '#3B82F6';
+        ctx.strokeStyle = csPath;
         ctx.lineWidth = 2;
         seq.forEach((c, i) => {
             if(i===0) ctx.moveTo(getX(c), getY(i));
@@ -1154,10 +1452,10 @@ function dsDrawPath(animate = false) {
         seq.forEach((c, i) => {
             ctx.beginPath();
             ctx.arc(getX(c), getY(i), 5, 0, Math.PI*2);
-            ctx.fillStyle = i===0 ? '#10B981' : '#EF4444';
+            ctx.fillStyle = i===0 ? csStart : csStop;
             ctx.fill();
             if (i>0) {
-                ctx.fillStyle = '#374151';
+                ctx.fillStyle = csLabel;
                 ctx.fillText(c, getX(c) + 15, getY(i) + 4);
             }
         });
@@ -1177,7 +1475,9 @@ function dsDrawPath(animate = false) {
             
             // clear and redraw grid
             ctx.clearRect(0,0, canvas.width, canvas.height);
-            ctx.strokeStyle = '#E5E7EB'; ctx.lineWidth = 1; ctx.fillStyle = '#6B7280';
+            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--canvas-grid').trim() || '#333336';
+            ctx.lineWidth = 1;
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--canvas-text').trim() || '#C0C0C6';
             gridLines.forEach((v, i) => {
                 let vx = getX(v);
                 ctx.beginPath(); ctx.moveTo(vx, padY); ctx.lineTo(vx, canvas.height - padY); ctx.stroke();
@@ -1187,7 +1487,7 @@ function dsDrawPath(animate = false) {
             
             // draw path up to current progress
             ctx.beginPath();
-            ctx.strokeStyle = '#3B82F6';
+            ctx.strokeStyle = csPath;
             ctx.lineWidth = 2;
             for(let i=0; i<=idx; i++) {
                 if(i===0) ctx.moveTo(getX(seq[i]), getY(i));
@@ -1204,10 +1504,10 @@ function dsDrawPath(animate = false) {
             for(let i=0; i<=idx; i++) {
                 ctx.beginPath();
                 ctx.arc(getX(seq[i]), getY(i), 5, 0, Math.PI*2);
-                ctx.fillStyle = i===0 ? '#10B981' : '#EF4444';
+                ctx.fillStyle = i===0 ? csStart : csStop;
                 ctx.fill();
                 if (i>0) {
-                    ctx.fillStyle = '#374151';
+                    ctx.fillStyle = csLabel;
                     ctx.fillText(seq[i], getX(seq[i]) + 15, getY(i) + 4);
                 }
             }
@@ -1274,15 +1574,359 @@ function dsRun() {
     dsDrawPath(true);
 }
 
-// Initial draw
-dsDrawPath(false);
+// Initial draw — animate on load
+setTimeout(() => {
+    const dirGroup = document.getElementById('ds-dir-group');
+    if (dirGroup) dirGroup.style.display = 'none'; // hidden for FCFS default
+    dsDrawPath(true);
+}, 100);
 
-// Handle window resize for canvas
 window.addEventListener('resize', () => {
     if(document.getElementById('module-disk').classList.contains('active')) {
         dsDrawPath(false);
     }
 });
+
+// --- MODULE 4: CPU SCHEDULING ---
+let cpuAlgo = 'FCFS';
+
+function setCpuAlgo(algo, btn) {
+    document.querySelectorAll('#cpu-algo-group .pill').forEach(p => p.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    cpuAlgo = algo;
+}
+
+function parseCpuProcesses() {
+    const raw = document.getElementById('cpu-processes').value;
+    // Regex to match P1(0, 5) or similar
+    const regex = /([A-Z0-9]+)\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)/gi;
+    let processes = [];
+    let match;
+    while ((match = regex.exec(raw)) !== null) {
+        processes.push({
+            id: match[1],
+            at: parseInt(match[2]),
+            bt: parseInt(match[3]),
+            rem: parseInt(match[3]), // remaining time for SRTF/RR
+            ct: 0, tat: 0, wt: 0
+        });
+    }
+    return processes.sort((a, b) => a.at - b.at);
+}
+
+function runCpuHeadless(algo, processes, quantum) {
+    let procs = processes.map(p => ({...p, rem: p.bt, ct:0, tat:0, wt:0}));
+    const n = procs.length;
+    let completed = 0;
+    let currentTime = 0;
+
+    if (algo === 'FCFS') {
+        procs.forEach(p => {
+            if (currentTime < p.at) currentTime = p.at;
+            currentTime += p.bt; p.ct = currentTime;
+            p.tat = p.ct - p.at; p.wt = p.tat - p.bt;
+        });
+    } else if (algo === 'SJF') {
+        let done = new Array(n).fill(false);
+        while (completed < n) {
+            let best = -1;
+            procs.forEach((p, i) => { if (!done[i] && p.at <= currentTime && (best === -1 || p.bt < procs[best].bt)) best = i; });
+            if (best === -1) { currentTime++; continue; }
+            currentTime += procs[best].bt; procs[best].ct = currentTime;
+            procs[best].tat = procs[best].ct - procs[best].at; procs[best].wt = procs[best].tat - procs[best].bt;
+            done[best] = true; completed++;
+        }
+    } else if (algo === 'SRTF') {
+        while (completed < n) {
+            let best = -1;
+            procs.forEach((p, i) => { if (p.at <= currentTime && p.rem > 0 && (best === -1 || p.rem < procs[best].rem)) best = i; });
+            if (best === -1) { currentTime++; continue; }
+            procs[best].rem--; currentTime++;
+            if (procs[best].rem === 0) {
+                procs[best].ct = currentTime; procs[best].tat = procs[best].ct - procs[best].at;
+                procs[best].wt = procs[best].tat - procs[best].bt; completed++;
+            }
+        }
+    } else if (algo === 'RR') {
+        let queue = [], done = new Array(n).fill(false), time = 0;
+        procs.forEach((p, i) => { if (p.at <= time) { queue.push(i); done[i] = true; } });
+        while (completed < n) {
+            if (!queue.length) { time++; procs.forEach((p,i)=>{ if(!done[i]&&p.at<=time){queue.push(i);done[i]=true;}}); continue; }
+            let idx = queue.shift(), p = procs[idx], exec = Math.min(p.rem, quantum);
+            time += exec; p.rem -= exec;
+            procs.forEach((pr,i)=>{ if(!done[i]&&pr.at<=time){queue.push(i);done[i]=true;}});
+            if (p.rem > 0) queue.push(idx);
+            else { p.ct=time; p.tat=p.ct-p.at; p.wt=p.tat-p.bt; completed++; }
+        }
+    }
+    const totalWt = procs.reduce((s,p) => s+p.wt, 0);
+    const totalTat = procs.reduce((s,p) => s+p.tat, 0);
+    return { avgWt: totalWt/n, avgTat: totalTat/n };
+}
+
+function cpuCompareAll() {
+    const processes = parseCpuProcesses();
+    if (!processes.length) return;
+    const quantum = parseInt(document.getElementById('cpu-quantum').value) || 2;
+    const algos = ['FCFS', 'SJF', 'SRTF', 'RR'];
+    const results = algos.map(a => ({ name: a, ...runCpuHeadless(a, processes, quantum) }));
+
+    const minWt = Math.min(...results.map(r => r.avgWt));
+    const maxWt = Math.max(...results.map(r => r.avgWt));
+
+    let chartHtml = '';
+    results.forEach(r => {
+        const h = maxWt > 0 ? Math.max((r.avgWt / maxWt) * 100, 8) : 8;
+        const cls = r.avgWt === minWt ? 'bar-fill best' : (r.avgWt === maxWt ? 'bar-fill worst' : 'bar-fill');
+        chartHtml += `<div class="bar-col"><div class="${cls}" style="height:${h}%">${r.avgWt.toFixed(1)}</div><div class="bar-label">${r.name}</div></div>`;
+    });
+
+    const sorted = [...results].sort((a,b) => a.avgWt - b.avgWt);
+    let tableHtml = '<tr><th>Rank</th><th>Algorithm</th><th>Avg Wait</th><th>Avg Turnaround</th></tr>';
+    sorted.forEach((r, i) => {
+        const best = i === 0 ? 'style="background:rgba(16,185,129,0.1);color:var(--color-hit);font-weight:600;"' : '';
+        tableHtml += `<tr ${best}><td>#${i+1}</td><td>${r.name}${i===0?' 🏆':''}</td><td>${r.avgWt.toFixed(1)}</td><td>${r.avgTat.toFixed(1)}</td></tr>`;
+    });
+
+    document.getElementById('cpu-chart').innerHTML = chartHtml;
+    document.getElementById('cpu-compare-table').innerHTML = tableHtml;
+    document.getElementById('cpu-compare-area').style.display = 'block';
+}
+
+function cpuRun() {
+    let processes = parseCpuProcesses();
+    if (processes.length === 0) return;
+
+    let gantt = [];
+    let currentTime = 0;
+    let completed = 0;
+    const n = processes.length;
+    const quantum = parseInt(document.getElementById('cpu-quantum').value) || 2;
+
+    if (cpuAlgo === 'FCFS') {
+        processes.forEach(p => {
+            if (currentTime < p.at) currentTime = p.at;
+            gantt.push({ id: p.id, start: currentTime, duration: p.bt });
+            currentTime += p.bt;
+            p.ct = currentTime;
+            p.tat = p.ct - p.at;
+            p.wt = p.tat - p.bt;
+        });
+    } else if (cpuAlgo === 'SJF') {
+        // Non-preemptive SJF
+        let readyQueue = [];
+        let done = new Array(n).fill(false);
+        while (completed < n) {
+            processes.forEach((p, i) => {
+                if (!done[i] && p.at <= currentTime) {
+                    readyQueue.push(i);
+                }
+            });
+
+            if (readyQueue.length === 0) {
+                currentTime++;
+                continue;
+            }
+
+            readyQueue.sort((a, b) => processes[a].bt - processes[b].bt);
+            let idx = readyQueue.shift();
+            let p = processes[idx];
+            
+            gantt.push({ id: p.id, start: currentTime, duration: p.bt });
+            currentTime += p.bt;
+            p.ct = currentTime;
+            p.tat = p.ct - p.at;
+            p.wt = p.tat - p.bt;
+            done[idx] = true;
+            completed++;
+            readyQueue = []; // Reset for next step
+        }
+    } else if (cpuAlgo === 'SRTF') {
+        // Preemptive SJF
+        let prevId = null;
+        let start = 0;
+        while (completed < n) {
+            let shortestIdx = -1;
+            let minBt = Infinity;
+
+            processes.forEach((p, i) => {
+                if (p.at <= currentTime && p.rem > 0 && p.rem < minBt) {
+                    minBt = p.rem;
+                    shortestIdx = i;
+                }
+            });
+
+            if (shortestIdx === -1) {
+                if (prevId) {
+                    gantt.push({ id: prevId, start: start, duration: currentTime - start });
+                    prevId = null;
+                }
+                currentTime++;
+                continue;
+            }
+
+            let p = processes[shortestIdx];
+            if (p.id !== prevId) {
+                if (prevId) gantt.push({ id: prevId, start: start, duration: currentTime - start });
+                prevId = p.id;
+                start = currentTime;
+            }
+
+            p.rem--;
+            currentTime++;
+
+            if (p.rem === 0) {
+                p.ct = currentTime;
+                p.tat = p.ct - p.at;
+                p.wt = p.tat - p.bt;
+                completed++;
+                gantt.push({ id: p.id, start: start, duration: currentTime - start });
+                prevId = null;
+            }
+        }
+    } else if (cpuAlgo === 'RR') {
+        let queue = [];
+        let time = 0;
+        let done = new Array(n).fill(false);
+        
+        // Initial processes
+        processes.forEach((p, i) => { if(p.at <= time) { queue.push(i); done[i] = true; } });
+
+        while (completed < n) {
+            if (queue.length === 0) {
+                time++;
+                processes.forEach((p, i) => { if(!done[i] && p.at <= time) { queue.push(i); done[i] = true; } });
+                continue;
+            }
+
+            let idx = queue.shift();
+            let p = processes[idx];
+            let execTime = Math.min(p.rem, quantum);
+            
+            gantt.push({ id: p.id, start: time, duration: execTime });
+            time += execTime;
+            p.rem -= execTime;
+
+            // Add new arrivals during execution
+            processes.forEach((pr, i) => {
+                if (!done[i] && pr.at <= time) {
+                    queue.push(i);
+                    done[i] = true;
+                }
+            });
+
+            if (p.rem > 0) {
+                queue.push(idx);
+            } else {
+                p.ct = time;
+                p.tat = p.ct - p.at;
+                p.wt = p.tat - p.bt;
+                completed++;
+            }
+        }
+    }
+
+    renderCpuResults(processes, gantt);
+}
+
+// Consistent process color palette — 12 vivid, dark-mode-safe colors
+const CPU_COLORS = [
+    { bg: '#7C3AED', text: '#fff' }, // violet
+    { bg: '#0EA5E9', text: '#fff' }, // sky
+    { bg: '#10B981', text: '#fff' }, // emerald
+    { bg: '#F59E0B', text: '#000' }, // amber
+    { bg: '#EF4444', text: '#fff' }, // red
+    { bg: '#EC4899', text: '#fff' }, // pink
+    { bg: '#14B8A6', text: '#fff' }, // teal
+    { bg: '#F97316', text: '#fff' }, // orange
+    { bg: '#6366F1', text: '#fff' }, // indigo
+    { bg: '#84CC16', text: '#000' }, // lime
+    { bg: '#8B5CF6', text: '#fff' }, // purple
+    { bg: '#06B6D4', text: '#fff' }, // cyan
+];
+
+function getProcessColorMap(processes) {
+    const map = {};
+    processes.forEach((p, i) => { map[p.id] = CPU_COLORS[i % CPU_COLORS.length]; });
+    return map;
+}
+
+function renderCpuResults(processes, gantt) {
+    const colorMap = getProcessColorMap(processes);
+
+    // Render Table with colored process ID badges
+    let html = '';
+    let totalTat = 0, totalWt = 0;
+    processes.forEach(p => {
+        totalTat += p.tat;
+        totalWt += p.wt;
+        const c = colorMap[p.id];
+        html += `<tr>
+            <td><span style="display:inline-block;padding:2px 10px;border-radius:20px;background:${c.bg};color:${c.text};font-weight:700;font-size:0.8rem;">${p.id}</span></td>
+            <td>${p.at}</td>
+            <td>${p.bt}</td>
+            <td>${p.ct}</td>
+            <td>${p.tat}</td>
+            <td>${p.wt}</td>
+        </tr>`;
+    });
+    document.getElementById('cpu-results').innerHTML = html;
+    document.getElementById('cpu-avg-tat').textContent = (totalTat / processes.length).toFixed(1);
+    document.getElementById('cpu-avg-wt').textContent = (totalWt / processes.length).toFixed(1);
+
+    // Render Gantt with staggered slide-in animation
+    const ganttEl = document.getElementById('cpu-gantt');
+    const labelEl = document.getElementById('cpu-gantt-labels');
+    ganttEl.innerHTML = '';
+    labelEl.innerHTML = '';
+
+    const totalTime = gantt[gantt.length - 1].start + gantt[gantt.length - 1].duration;
+
+    gantt.forEach((block, i) => {
+        const width = (block.duration / totalTime) * 100;
+        const c = colorMap[block.id];
+        const div = document.createElement('div');
+        div.style.width = width + '%';
+        div.style.background = c.bg;
+        div.style.display = 'flex';
+        div.style.alignItems = 'center';
+        div.style.justifyContent = 'center';
+        div.style.color = c.text;
+        div.style.fontSize = '0.78rem';
+        div.style.fontWeight = '700';
+        div.style.borderRight = '2px solid rgba(0,0,0,0.15)';
+        div.style.position = 'relative';
+        div.style.overflow = 'hidden';
+        div.style.flexShrink = '0';
+        div.textContent = block.id;
+        // Tooltip for time range
+        div.title = `${block.id}: t=${block.start} → t=${block.start + block.duration}`;
+
+        // Staggered grow-in animation via CSS
+        div.style.animation = `ganttBlockIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both`;
+        div.style.animationDelay = `${i * 80}ms`;
+
+        // Shimmer overlay
+        const shine = document.createElement('div');
+        shine.style.cssText = `position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);animation:ganttShimmer 1.2s ease ${i*80+400}ms both;`;
+        div.appendChild(shine);
+
+        ganttEl.appendChild(div);
+
+        // Time labels
+        if (i === 0) {
+            const s = document.createElement('span');
+            s.style.cssText = 'font-size:0.72rem;color:var(--text-muted);white-space:nowrap;margin-right:auto;';
+            s.textContent = block.start;
+            labelEl.appendChild(s);
+        }
+        const e = document.createElement('span');
+        e.style.cssText = `flex:${width};text-align:right;font-size:0.72rem;color:var(--text-muted);white-space:nowrap;`;
+        e.textContent = block.start + block.duration;
+        labelEl.appendChild(e);
+    });
+}
+
 
 </script>
 </body>
