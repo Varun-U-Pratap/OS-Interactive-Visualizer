@@ -259,6 +259,7 @@
         padding: 1.5rem;
         display: flex;
         gap: 1rem;
+        overflow: visible;
     }
 
     /* Left side: flow column */
@@ -483,6 +484,15 @@
         box-shadow: 0 0 8px var(--accent-glow);
     }
     .flow-arrow-head.active { border-top-color: var(--accent); }
+
+    /* SVG arrow path animation */
+    @keyframes flowDash {
+        from { stroke-dashoffset: 20; }
+        to   { stroke-dashoffset: 0; }
+    }
+    .svg-arrow-flow {
+        animation: flowDash 0.5s linear infinite;
+    }
 </style>
 </head>
 <body>
@@ -823,6 +833,22 @@ function renderTlb() {
 initPtTable();
 renderTlb();
 
+// ─── SVG ARROW SYSTEM ─────────────────────────────────────────────────────────
+// Tracks how many arrows have been drawn from each element (by id)
+// so subsequent ones get a lateral offset and avoid overlapping.
+const _arrowOffsetMap = {};
+
+function _resetArrowOffsets() {
+    for (const k in _arrowOffsetMap) delete _arrowOffsetMap[k];
+}
+
+function _nextOffset(key, step = 12) {
+    if (_arrowOffsetMap[key] === undefined) _arrowOffsetMap[key] = 0;
+    const v = _arrowOffsetMap[key];
+    _arrowOffsetMap[key] += step;
+    return v - (_arrowOffsetMap[key] - step) / 2; // centre the spread
+}
+
 // Encode color to a safe SVG id
 function colorToId(color) {
     return color.replace('#','').replace(/[^a-zA-Z0-9]/g, '_');
@@ -831,108 +857,199 @@ function colorToId(color) {
 function ensureSvgDefs(svg, color) {
     const markerId = 'arrowhead-' + colorToId(color);
     const filterId  = 'glow-' + colorToId(color);
-    if (document.getElementById(markerId)) return { markerId, filterId };
+    const glowSoftId = 'glow-soft-' + colorToId(color);
+    if (svg.querySelector(`#${markerId}`)) return { markerId, filterId, glowSoftId };
 
-    // Build defs block if not present
     let defs = svg.querySelector('defs');
     if (!defs) {
         defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
         svg.insertBefore(defs, svg.firstChild);
     }
 
-    // Per-color arrowhead marker
-    defs.innerHTML += `
-        <marker id="${markerId}" markerWidth="10" markerHeight="8"
-                refX="8" refY="4" orient="auto" markerUnits="userSpaceOnUse">
-            <path d="M0,1 L9,4 L0,7 Z" fill="${color}" stroke="none"/>
-        </marker>
-        <filter id="${filterId}" x="-40%" y="-40%" width="180%" height="180%">
-            <feGaussianBlur stdDeviation="2.5" result="blur"/>
-            <feMerge>
-                <feMergeNode in="blur"/>
-                <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-        </filter>`;
+    // Elegant, slim arrowhead
+    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+    marker.setAttribute('id', markerId);
+    marker.setAttribute('markerWidth', '12');
+    marker.setAttribute('markerHeight', '9');
+    marker.setAttribute('refX', '10');
+    marker.setAttribute('refY', '4.5');
+    marker.setAttribute('orient', 'auto');
+    marker.setAttribute('markerUnits', 'userSpaceOnUse');
+    marker.innerHTML = `<path d="M0,1.5 L10,4.5 L0,7.5 Q3,4.5 0,1.5 Z" fill="${color}" stroke="none"/>`;
+    defs.appendChild(marker);
+
+    // Soft glow filter
+    const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+    filter.setAttribute('id', filterId);
+    filter.setAttribute('x', '-50%'); filter.setAttribute('y', '-50%');
+    filter.setAttribute('width', '200%'); filter.setAttribute('height', '200%');
+    filter.innerHTML = `
+        <feGaussianBlur stdDeviation="3" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>`;
+    defs.appendChild(filter);
 
     return { markerId, filterId };
 }
 
+/**
+ * createSvgPath — draws a beautiful, naturally-curved SVG arrow between two DOM elements.
+ *
+ * Smart routing:
+ *  • RIGHT of source  → exits source right-edge, enters target left-edge  (horizontal S-curve)
+ *  • BELOW  source    → exits source bottom, enters target top            (vertical S-curve)
+ *  • ABOVE  source    → exits source top, enters target bottom            (arcs above both)
+ *  • isDashed         → offset dashed sibling-link bowed below both boxes
+ *
+ * Lateral offsets prevent multiple arrows from the same element piling on top.
+ */
 function createSvgPath(svg, el1, el2, color, isDashed = false) {
     const r1 = el1.getBoundingClientRect();
     const r2 = el2.getBoundingClientRect();
     const sr = svg.getBoundingClientRect();
 
-    let x1, y1, x2, y2, d;
+    // Convert to SVG-local coordinates
+    const toSvg = (x, y) => ({ x: x - sr.left, y: y - sr.top });
+
+    const src  = { cx: r1.left + r1.width  / 2, cy: r1.top + r1.height / 2 };
+    const dst  = { cx: r2.left + r2.width  / 2, cy: r2.top + r2.height / 2 };
+
+    // Decide which edge of each element to exit/enter
+    const relX = dst.cx - src.cx;  // positive → target is to the right
+    const relY = dst.cy - src.cy;  // positive → target is below
+
+    // Unique keys for offset tracking
+    const srcKey = el1.id || el1.className;
+    const dstKey = el2.id || el2.className;
+
+    let x1, y1, x2, y2, cx1, cy1, cx2, cy2;
 
     if (isDashed) {
-        // Offset/dashed path — curves downward below the boxes
-        x1 = r1.left + r1.width / 2 - sr.left;
-        y1 = r1.bottom - sr.top;
-        x2 = r2.left + r2.width / 2 - sr.left;
-        y2 = r2.bottom - sr.top;
-        const bow = 70;
-        d = `M ${x1} ${y1} C ${x1} ${y1 + bow}, ${x2} ${y2 + bow}, ${x2} ${y2}`;
-    } else if (r2.top > r1.bottom + 5) {
-        // Downward flow — exit bottom of el1, enter top of el2
-        x1 = r1.left + r1.width / 2 - sr.left;
-        y1 = r1.bottom - sr.top;
-        x2 = r2.left + r2.width / 2 - sr.left;
-        y2 = r2.top - sr.top;
-        const dy = Math.max((y2 - y1) * 0.45, 30);
-        d = `M ${x1} ${y1} C ${x1} ${y1 + dy}, ${x2} ${y2 - dy}, ${x2} ${y2}`;
+        // ── Offset-link (dashed) ──────────────────────────────────────────────
+        // Bow the path below both source and destination boxes.
+        const p1 = toSvg(r1.left + r1.width / 2, r1.bottom);
+        const p2 = toSvg(r2.left + r2.width / 2, r2.bottom);
+        const bow = Math.max(55, Math.abs(p2.x - p1.x) * 0.55);
+        x1 = p1.x; y1 = p1.y;
+        x2 = p2.x; y2 = p2.y;
+        cx1 = x1; cy1 = y1 + bow;
+        cx2 = x2; cy2 = y2 + bow;
+
+    } else if (Math.abs(relX) < r1.width * 0.7 && relY > 20) {
+        // ── Nearly-vertical: exit bottom → enter top ─────────────────────────
+        // Apply a lateral offset so stacked arrows spread apart
+        const offsetCount = (_arrowOffsetMap[srcKey] || 0);
+        _arrowOffsetMap[srcKey] = offsetCount + 1;
+        const lateralShift = (offsetCount - 0) * 14; // first arrow: 0, second: 14 …
+
+        const p1 = toSvg(src.cx + lateralShift, r1.bottom);
+        const p2 = toSvg(dst.cx + lateralShift * 0.5, r2.top);
+        x1 = p1.x; y1 = p1.y;
+        x2 = p2.x; y2 = p2.y;
+
+        const dy = Math.max((y2 - y1) * 0.5, 35);
+        cx1 = x1; cy1 = y1 + dy;
+        cx2 = x2; cy2 = y2 - dy;
+
+    } else if (relX > 20) {
+        // ── Target is to the right → exit right, enter left ──────────────────
+        // Vertical offset for multiple arrows from same element
+        const offsetCount = (_arrowOffsetMap[srcKey] || 0);
+        _arrowOffsetMap[srcKey] = offsetCount + 1;
+        const vertShift = (offsetCount - 0) * 12;
+
+        const p1 = toSvg(r1.right, src.cy + vertShift);
+        const p2 = toSvg(r2.left,  dst.cy + vertShift * 0.4);
+        x1 = p1.x; y1 = p1.y;
+        x2 = p2.x; y2 = p2.y;
+
+        // Natural S-curve: first CP pushes right from source, second pulls left toward target
+        const dx = Math.max(Math.abs(x2 - x1) * 0.55, 50);
+        const dyBow = relY * 0.2; // slight vertical arc if there's a height difference
+        cx1 = x1 + dx; cy1 = y1 + dyBow * 0.3;
+        cx2 = x2 - dx; cy2 = y2 - dyBow * 0.3;
+
+    } else if (relX < -20) {
+        // ── Target is to the left → exit left, enter right ───────────────────
+        const offsetCount = (_arrowOffsetMap[srcKey] || 0);
+        _arrowOffsetMap[srcKey] = offsetCount + 1;
+        const vertShift = (offsetCount - 0) * 12;
+
+        const p1 = toSvg(r1.left,  src.cy + vertShift);
+        const p2 = toSvg(r2.right, dst.cy + vertShift * 0.4);
+        x1 = p1.x; y1 = p1.y;
+        x2 = p2.x; y2 = p2.y;
+
+        const dx = Math.max(Math.abs(x2 - x1) * 0.55, 50);
+        cx1 = x1 - dx; cy1 = y1;
+        cx2 = x2 + dx; cy2 = y2;
+
     } else {
-        // Horizontal / cross connection — exit right of el1, enter left of el2
-        x1 = r1.right - sr.left;
-        y1 = r1.top + r1.height / 2 - sr.top;
-        x2 = r2.left - sr.left;
-        y2 = r2.top + r2.height / 2 - sr.top;
-        const dx = Math.max(Math.abs(x2 - x1) * 0.5, 40);
-        d = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+        // ── Fallback: generic curve using element centers ─────────────────────
+        const p1 = toSvg(src.cx, r1.bottom);
+        const p2 = toSvg(dst.cx, r2.top);
+        x1 = p1.x; y1 = p1.y;
+        x2 = p2.x; y2 = p2.y;
+        const dy = Math.max(Math.abs(y2 - y1) * 0.45, 30);
+        cx1 = x1; cy1 = y1 + dy;
+        cx2 = x2; cy2 = y2 - dy;
     }
+
+    const d = `M ${x1.toFixed(1)} ${y1.toFixed(1)} C ${cx1.toFixed(1)} ${cy1.toFixed(1)}, ${cx2.toFixed(1)} ${cy2.toFixed(1)}, ${x2.toFixed(1)} ${y2.toFixed(1)}`;
 
     const { markerId, filterId } = ensureSvgDefs(svg, color);
 
-    // Glow path (slightly thicker, blurred duplicate behind)
+    // ── Halo / glow layer ─────────────────────────────────────────────────────
     const glow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     glow.setAttribute('d', d);
     glow.setAttribute('stroke', color);
-    glow.setAttribute('stroke-width', isDashed ? '3' : '4');
+    glow.setAttribute('stroke-width', isDashed ? '4' : '6');
     glow.setAttribute('fill', 'none');
-    glow.setAttribute('opacity', '0.35');
+    glow.setAttribute('opacity', '0');
     glow.setAttribute('filter', `url(#${filterId})`);
-    if (isDashed) glow.setAttribute('stroke-dasharray', '6,5');
+    if (isDashed) glow.setAttribute('stroke-dasharray', '7,6');
     svg.appendChild(glow);
 
-    // Main path
+    // ── Main path ─────────────────────────────────────────────────────────────
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', d);
     path.setAttribute('stroke', color);
-    path.setAttribute('stroke-width', isDashed ? '1.5' : '2');
+    path.setAttribute('stroke-width', isDashed ? '1.8' : '2.2');
     path.setAttribute('fill', 'none');
     path.setAttribute('stroke-linecap', 'round');
     path.setAttribute('stroke-linejoin', 'round');
-    if (isDashed) path.setAttribute('stroke-dasharray', '6,5');
     path.setAttribute('marker-end', `url(#${markerId})`);
 
-    // Draw-on animation
-    const len = path.getTotalLength ? path.getTotalLength() : 300;
-    path.style.strokeDasharray = `${len} ${len}`;
-    path.style.strokeDashoffset = `${len}`;
-    path.style.transition = 'stroke-dashoffset 0.65s cubic-bezier(0.4,0,0.2,1)';
-    svg.appendChild(path);
+    if (isDashed) {
+        // Animated flowing dash
+        path.setAttribute('stroke-dasharray', '7,5');
+        path.classList.add('svg-arrow-flow');
+        svg.appendChild(path);
+        // Fade in the dashed path
+        path.style.opacity = '0';
+        path.style.transition = 'opacity 0.5s ease';
+        path.getBoundingClientRect();
+        path.style.opacity = '1';
+    } else {
+        // Draw-on animation for solid arrows
+        const len = path.getTotalLength ? path.getTotalLength() : 300;
+        path.style.strokeDasharray = `${len} ${len}`;
+        path.style.strokeDashoffset = `${len}`;
+        path.style.transition = 'stroke-dashoffset 0.7s cubic-bezier(0.4,0,0.2,1)';
+        svg.appendChild(path);
+        path.getBoundingClientRect();
+        path.style.strokeDashoffset = '0';
+    }
 
-    // Force reflow then animate
-    path.getBoundingClientRect();
-    path.style.strokeDashoffset = '0';
-    glow.style.opacity = '0';
-    glow.style.transition = 'opacity 0.65s ease';
+    // ── Fade-in glow after draw ───────────────────────────────────────────────
+    glow.style.transition = 'opacity 0.7s ease 0.3s';
     glow.getBoundingClientRect();
-    glow.style.opacity = '0.35';
+    glow.style.opacity = isDashed ? '0.25' : '0.4';
 }
 
 function animatePaging() {
     const svg = document.getElementById('paging-svg');
     svg.innerHTML = '';
+    _resetArrowOffsets();
     document.querySelectorAll('#pt-table tr').forEach(tr => tr.classList.remove('highlight'));
     
     const la = parseInt(document.getElementById('pg-addr').value);
@@ -990,9 +1107,124 @@ function finishPagingAnim(p, f, d, size, offsetBits, svg, sourceEl) {
     document.getElementById('val-physical').innerHTML = `${pa}<br><span style="font-size:0.8rem;color:var(--text-muted);font-weight:400">BIN: ${pa.toString(2)}</span>`;
     
     createSvgPath(svg, sourceEl, document.getElementById('blk-physical'), '#10B981');
-    createSvgPath(svg, document.getElementById('val-d1'), document.getElementById('val-d2'), '#9CA3AF', true);
+    createOffsetBridgePath(svg, document.getElementById('val-d1'), document.getElementById('val-d2'));
     
     document.getElementById('pg-expl').innerHTML += `<br><br><strong>Final Step:</strong> Physical Address = (Frame <strong>${f}</strong> &times; ${size}) + Offset <strong>${d}</strong> = <strong>${pa}</strong>.`;
+}
+
+/**
+ * createOffsetBridgePath — draws the "Offset carry" arrow.
+ *
+ * Routes the arrow to the LEFT of the diagram — outside the diagram panel
+ * entirely — forming a wide, graceful arc that bypasses all intermediate blocks.
+ *
+ *   val-d1  exit-left  →  far-left arc  →  enter-left  val-d2
+ *
+ * Because the SVG uses overflow:visible and the diagram-area has
+ * overflow:visible, the arc can extend into the left gutter of the page.
+ */
+function createOffsetBridgePath(svg, el1, el2) {
+    const color = '#94A3B8';   // slate-400
+    const sr    = svg.getBoundingClientRect();
+    const r1    = el1.getBoundingClientRect();
+    const r2    = el2.getBoundingClientRect();
+
+    // Exit / enter from the LEFT edge of each chip
+    const startX = r1.left  - sr.left;
+    const startY = r1.top   + r1.height / 2 - sr.top;
+    const endX   = r2.left  - sr.left;
+    const endY   = r2.top   + r2.height / 2 - sr.top;
+
+    // Swing LEFT — subtract from the smaller of startX/endX.
+    // Use a fixed 80px swing so the arc always clears the diagram border.
+    const swing = 80;
+    const leftX = Math.min(startX, endX) - swing;
+
+    // Simple symmetric cubic: both control points at (leftX, startY) and (leftX, endY)
+    const cx1 = leftX;
+    const cy1 = startY;
+    const cx2 = leftX;
+    const cy2 = endY;
+
+    const pathD = `M ${startX.toFixed(1)} ${startY.toFixed(1)} ` +
+                  `C ${cx1.toFixed(1)} ${cy1.toFixed(1)}, ` +
+                  `${cx2.toFixed(1)} ${cy2.toFixed(1)}, ` +
+                  `${endX.toFixed(1)} ${endY.toFixed(1)}`;
+
+    const { markerId, filterId } = ensureSvgDefs(svg, color);
+
+    // Glow halo
+    const glow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    glow.setAttribute('d', pathD);
+    glow.setAttribute('stroke', color);
+    glow.setAttribute('stroke-width', '6');
+    glow.setAttribute('fill', 'none');
+    glow.setAttribute('opacity', '0');
+    glow.setAttribute('stroke-dasharray', '9,7');
+    glow.setAttribute('filter', `url(#${filterId})`);
+    svg.appendChild(glow);
+
+    // Main animated dashed path
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', pathD);
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '2');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('stroke-linejoin', 'round');
+    path.setAttribute('stroke-dasharray', '8,6');
+    path.setAttribute('marker-end', `url(#${markerId})`);
+    path.classList.add('svg-arrow-flow');
+    svg.appendChild(path);
+
+    // Fade in
+    path.style.opacity = '0';
+    path.style.transition = 'opacity 0.6s ease 0.15s';
+    glow.style.transition  = 'opacity 0.6s ease 0.5s';
+    path.getBoundingClientRect();
+    path.style.opacity = '1';
+    glow.getBoundingClientRect();
+    glow.style.opacity = '0.3';
+
+    // "OFFSET" label at the leftmost point of the arc (t=0.5)
+    const t  = 0.5;
+    const lx = Math.pow(1-t,3)*startX + 3*Math.pow(1-t,2)*t*cx1
+             + 3*(1-t)*t*t*cx2        + Math.pow(t,3)*endX;
+    const ly = Math.pow(1-t,3)*startY + 3*Math.pow(1-t,2)*t*cy1
+             + 3*(1-t)*t*t*cy2        + Math.pow(t,3)*endY;
+
+    const PW = 50, PH = 18;
+    const pill = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    pill.setAttribute('x',      (lx - PW / 2).toFixed(1));
+    pill.setAttribute('y',      (ly - PH / 2).toFixed(1));
+    pill.setAttribute('width',  PW);
+    pill.setAttribute('height', PH);
+    pill.setAttribute('rx', '6');
+    pill.setAttribute('fill', 'rgba(15,15,20,0.92)');
+    pill.setAttribute('stroke', color);
+    pill.setAttribute('stroke-width', '0.9');
+    pill.setAttribute('opacity', '0');
+    svg.appendChild(pill);
+
+    const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    lbl.setAttribute('x', lx.toFixed(1));
+    lbl.setAttribute('y', ly.toFixed(1));
+    lbl.setAttribute('text-anchor', 'middle');
+    lbl.setAttribute('dominant-baseline', 'middle');
+    lbl.setAttribute('font-size', '10');
+    lbl.setAttribute('font-family', 'Inter, sans-serif');
+    lbl.setAttribute('font-weight', '700');
+    lbl.setAttribute('letter-spacing', '0.05em');
+    lbl.setAttribute('fill', color);
+    lbl.setAttribute('opacity', '0');
+    lbl.textContent = 'OFFSET';
+    svg.appendChild(lbl);
+
+    pill.style.transition = lbl.style.transition = 'opacity 0.45s ease 0.65s';
+    pill.getBoundingClientRect();
+    lbl.getBoundingClientRect();
+    pill.style.opacity = '1';
+    lbl.style.opacity  = '0.9';
 }
 
 
